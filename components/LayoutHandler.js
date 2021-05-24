@@ -1,58 +1,30 @@
 export default class LayoutHandler {
-  _offset = null
-  _element = null
-  _startOffset = null
-  _endOffset = null
-  _isHorizontal = false
+  _scrollElement = null
+  _layoutElement = null
 
-  _roughlyMeasuredSpace = null
-  _countOfDisplayedElementsOnPage = null
-  _countOfStoragesScreens = 3
-  _layoutSize
-
-  /**
-   * @param offset Number
-   * @param element Element
-   * @param ocupiedSpacesRoughlyEqual Boolean
-   */
-  constructor({ offset, element, occupiedSpacesRoughlyEqual, isHorizontal }) {
-    this._offset = offset
-    this._element = element
-    this._roughlyEqual = occupiedSpacesRoughlyEqual || true
-    this._isHorizontal = isHorizontal || false
+  constructor({ layoutElement, scrollElement }) {
+    this._scrollElement = scrollElement
+    this._layoutElement = layoutElement
+    console.log(this._layoutElement)
   }
 
   computeLayoutSize() {
-    return (
-      this._countOfDisplayedElementsOnPage *
-      this._countOfStoragesScreens *
-      3 * // Approximately how many times will the content stretch after filling with data
-      this._roughlyMeasuredSpace
-    )
+    console.log(this.getParentContainerSize(), this.getElementSize())
   }
 
-  // ----------------------------- //
-  //        PUBLIC METHODS         //
-  // ----------------------------- //
+  getElementSize() {
+    return this._layoutElement.offsetHeight || this._layoutElement.innerHeight
+  }
 
-  prepareLayoutSize(scrollParentContainerSize) {
-    // TODO: Требует проверок
-    if (this._roughlyEqual) {
-      this._countOfDisplayedElementsOnPage = Math.ceil(
-        scrollParentContainerSize / this._roughlyMeasuredSpace
+  getParentContainerSize() {
+    const parentNode = this._scrollElement.parentNode
+    if (
+      ['HTML', 'BODY', undefined, null].includes(
+        parentNode && parentNode.tagName
       )
-      this._layoutSize = this.computeLayoutSize()
-      return this._layoutSize
+    ) {
+      return window[this._isHorizontal ? 'innerWidth' : 'innerHeight']
     }
-  }
-
-  getCountOfPagesOnScreen() {
-    return this._countOfDisplayedElementsOnPage
-  }
-
-  estimateCollection() {
-    this._roughlyMeasuredSpace = this._isHorizontal
-      ? this._element.offsetWidth
-      : this._element.offsetHeight
+    return parentNode[this._isHorizontal ? 'offsetWidth' : 'offsetHeight']
   }
 }
