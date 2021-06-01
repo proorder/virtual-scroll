@@ -1,6 +1,8 @@
 <template lang="pug">
   .container
     scroll-container(
+      :indexes="indexes",
+      :total="total",
       :collection="items",
       :classes="['page-items-list']",
       scroll-selector="document",
@@ -17,6 +19,7 @@
 <script>
 import { v4 as uuid } from 'uuid'
 import itemsList from '~/assets/server-response.json'
+import { pageToIndexes } from '~/components/helpers/calculateElementsScope'
 
 function generatePage(page) {
   return itemsList.map((item, index) => {
@@ -35,10 +38,15 @@ export default {
       page: 1,
       total: 500,
       limit: 14,
-      lastPage: Math.ceil(140 / 14),
+      lastPage: Math.ceil(500 / 14),
       items: generatePage(1),
       paginationHandler: null,
     }
+  },
+  computed: {
+    indexes() {
+      return pageToIndexes(this.page, this.limit, this.total)
+    },
   },
   watch: {
     page(value) {

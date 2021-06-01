@@ -6,9 +6,21 @@ import CollectionHandler from './CollectionHandler'
 export default {
   name: 'ScrollContainer',
   props: {
-    page: {
+    min: {
       type: Number,
-      default: 1,
+      default: 4,
+    },
+    start: {
+      type: Number,
+      default: 0,
+    },
+    indexes: {
+      type: Array,
+      default: () => [null, null],
+    },
+    total: {
+      type: Number,
+      default: 0,
     },
     scrollSelector: {
       type: [String, Object],
@@ -60,7 +72,6 @@ export default {
           this.fillCollection(value)
           return
         }
-        this.displayCollection = value
         this.$nextTick(() => {
           this.initScrollFacade()
           this.fillCollection(value)
@@ -72,15 +83,18 @@ export default {
     fillCollection(collection) {
       const { displayCollection } = this.scrollFacade.getDisplayCollection({
         collection,
-        page: this.page,
+        indexes: this.indexes,
+        total: this.total,
+        minDisplayCollection: this.min,
+        start: this.start,
       })
-      this.displayCollection = displayCollection
-      setTimeout(() => {
-        const { layoutSize } = this.scrollFacade.computeLayoutSize()
-        if (layoutSize) {
-          this.setLayoutSize(layoutSize)
+      this.$set(this, 'displayCollection', displayCollection)
+      this.scrollFacade.initMutationObserver().then(({ layoutSize }) => {
+        if (!layoutSize) {
+          return
         }
-      }, 20)
+        this.setLayoutSize(layoutSize)
+      })
     },
     setLayoutSize(layoutSize) {
       this.layoutSize = layoutSize

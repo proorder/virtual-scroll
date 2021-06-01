@@ -7,20 +7,23 @@ export default class CollectionHandler {
   }
 
   setCollection(value) {
-    // const { newItems } = this.getCollectionsDifferences(this._collection, value)
     if (!this._collection.length) {
       this._collection = value
     }
   }
 
-  getCollectionsDifferences(oldCollection, newCollection) {
-    return {
-      newItems: [],
-      deletedItems: [],
-    }
-  }
+  getDisplayCollection(startIndex, amount) {
+    const displayCollection = this._collection.slice(
+      startIndex,
+      startIndex + amount
+    )
 
-  getDisplayCollection() {
-    return this._collection
+    return {
+      displayCollection,
+      missingElementIndex:
+        displayCollection.length < amount
+          ? startIndex + displayCollection.length
+          : null,
+    }
   }
 }
