@@ -1,13 +1,9 @@
-// import {
-//   getCurrentScope,
-//   calculateScopes,
-// } from './helpers/calculateElementsScope'
-
 export default class ScrollFacade {
   _scrollHandler = null
   _layoutHandler = null
   _collectionHandler = null
 
+  displayCollectionLength = 0
   currentScope = 1
   scopesCount = 1
 
@@ -22,7 +18,7 @@ export default class ScrollFacade {
     indexes,
     total,
     minDisplayCollection,
-    start,
+    startIndex,
   }) {
     if (!collection) {
       return this._collectionHandler.getDisplayCollection(
@@ -31,28 +27,24 @@ export default class ScrollFacade {
       )
     }
 
-    const displayCollectionLength = this._layoutHandler.getDisplayCollectionLength(
+    this.displayCollectionLength = this._layoutHandler.getDisplayCollectionLength(
       { min: minDisplayCollection }
     )
 
-    // const { scopes, elementsInScope } = calculateScopes(indexes, total)
-    // this.scopesCount = scopes
-    // this.currentScope = getCurrentScope(indexes[0], elementsInScope)
+    this.scopesCount = Math.ceil(total / this.displayCollectionLength)
 
     this._collectionHandler.setCollection(collection)
 
-    if (!this._layoutHandler.firstCallOccurred) {
-      return this._collectionHandler.getDisplayCollection(
-        indexes[0],
-        minDisplayCollection
-      )
-    }
+    return this._collectionHandler.getDisplayCollection(
+      startIndex,
+      this.displayCollectionLength
+    )
   }
 
   initMutationObserver() {
     return this._layoutHandler.initMutationObserver({
-      scope: this.currentScope,
       scopesCount: this.scopesCount,
+      displayCollectionLength: this.displayCollectionLength,
     })
   }
 }

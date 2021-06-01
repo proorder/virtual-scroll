@@ -6,13 +6,13 @@ import CollectionHandler from './CollectionHandler'
 export default {
   name: 'ScrollContainer',
   props: {
+    startIndex: {
+      type: Number,
+      default: 0,
+    },
     min: {
       type: Number,
       default: 4,
-    },
-    start: {
-      type: Number,
-      default: 0,
     },
     indexes: {
       type: Array,
@@ -80,20 +80,34 @@ export default {
     },
   },
   methods: {
-    fillCollection(collection) {
-      const { displayCollection } = this.scrollFacade.getDisplayCollection({
+    // requireElements(elements) {
+    //   this.$emit('load', elements)
+    // },
+    fillCollection(collection, startIndex = this.startIndex) {
+      const { displayCollection } = this.getDisplayCollection(
+        collection,
+        startIndex
+      )
+      this.$set(this, 'displayCollection', displayCollection)
+      this.scrollFacade
+        .initMutationObserver()
+        .then(({ layoutSize, displayedElementsCount }) => {
+          if (!layoutSize) {
+            return
+          }
+          this.setLayoutSize(layoutSize)
+          if (displayedElementsCount && displayedElementsCount > this.min) {
+            this.fillCollection(collection, startIndex)
+          }
+        })
+    },
+    getDisplayCollection(collection, startIndex) {
+      return this.scrollFacade.getDisplayCollection({
         collection,
         indexes: this.indexes,
         total: this.total,
         minDisplayCollection: this.min,
-        start: this.start,
-      })
-      this.$set(this, 'displayCollection', displayCollection)
-      this.scrollFacade.initMutationObserver().then(({ layoutSize }) => {
-        if (!layoutSize) {
-          return
-        }
-        this.setLayoutSize(layoutSize)
+        startIndex,
       })
     },
     setLayoutSize(layoutSize) {

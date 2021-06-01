@@ -15,19 +15,22 @@ export default class LayoutHandler {
     this._layoutElement = layoutElement
   }
 
-  computeLayoutSize({ scope, scopesCount }) {
-    this.layoutSize[scope] = this.getElementSize()
+  computeLayoutSize({ scopesCount, displayCollectionLength }) {
+    // this.layoutSize[scope] = this.getElementSize()
     if (this.firstCallOccurred) {
       return
     }
-    // this._countOfDisplayedElementsOnPage = Math.ceil(
-    //   this.getParentContainerSize() / this.layoutSize[scope]
-    // )
+
+    this._countOfDisplayedElementsOnPage = Math.ceil(
+      (this.getParentContainerSize() / this.getElementSize()) *
+        displayCollectionLength
+    )
+
     this.firstCallOccurred = true
     return (
       scopesCount *
       1.5 * // Approximately how many times will the content stretch after filling with data
-      this.layoutSize[scope]
+      this.getElementSize()
     )
   }
 
@@ -37,16 +40,22 @@ export default class LayoutHandler {
     )
   }
 
-  initMutationObserver({ scope, scopesCount }) {
+  initMutationObserver({ scopesCount, displayCollectionLength }) {
     return new Promise((resolve) => {
       this.mutationObserver = new MutationObserver(() => {
         if (!this._layoutElement.offsetHeight) {
           return
         }
-        const layoutSize = this.computeLayoutSize({ scope, scopesCount })
+        const layoutSize = this.computeLayoutSize({
+          scopesCount,
+          displayCollectionLength,
+        })
         if (layoutSize) {
           this.mutationObserver.disconnect()
-          resolve({ layoutSize })
+          resolve({
+            layoutSize,
+            displayedElementsCount: this._countOfDisplayedElementsOnPage,
+          })
         }
       })
       this.mutationObserver.observe(this._layoutElement, {
@@ -55,7 +64,7 @@ export default class LayoutHandler {
     })
   }
 
-  getDisplayCollectionLength({ amountDisplayedElements, min, total }) {
+  getDisplayCollectionLength({ min, total }) {
     if (!this.firstCallOccurred) {
       return min
     }
