@@ -6,6 +6,10 @@ import CollectionHandler from './CollectionHandler'
 export default {
   name: 'ScrollContainer',
   props: {
+    page: {
+      type: Number,
+      default: 1,
+    },
     scrollSelector: {
       type: [String, Object],
       default: null,
@@ -37,9 +41,12 @@ export default {
   },
   data() {
     return {
+      collectionHandler: null,
       displayCollectionPromises: [],
       displayCollection: [],
       scrollElement: null,
+      scrollFacade: null,
+      layoutSize: null,
     }
   },
   watch: {
@@ -49,20 +56,35 @@ export default {
         if (!process.client) {
           return
         }
-        if (!this.scrollFacade) {
-          this.initScrollFacade()
+        if (this.scrollFacade) {
+          this.fillCollection(value)
+          return
         }
-        const { displayCollection } = this.scrollFacade.getDisplayCollection(
-          value
-        )
-        this.displayCollection = displayCollection
+        this.displayCollection = value
         this.$nextTick(() => {
-          this.scrollFacade.computeLayoutSize()
+          this.initScrollFacade()
+          this.fillCollection(value)
         })
       },
     },
   },
   methods: {
+    fillCollection(collection) {
+      const { displayCollection } = this.scrollFacade.getDisplayCollection({
+        collection,
+        page: this.page,
+      })
+      this.displayCollection = displayCollection
+      setTimeout(() => {
+        const { layoutSize } = this.scrollFacade.computeLayoutSize()
+        if (layoutSize) {
+          this.setLayoutSize(layoutSize)
+        }
+      }, 20)
+    },
+    setLayoutSize(layoutSize) {
+      this.layoutSize = layoutSize
+    },
     initScrollFacade() {
       this.setupScrollElement()
       const scrollHandler = new this.ScrollHandlerClass()
@@ -70,12 +92,12 @@ export default {
         scrollElement: this.scrollElement,
         layoutElement: this.$refs.transmitter,
       })
-      const collectionHandler = new this.CollectionHandlerClass({
+      this.collectionHandler = new this.CollectionHandlerClass({
         layoutHandler,
       })
       this.scrollFacade = new ScrollFacade({
         scrollHandler,
-        collectionHandler,
+        collectionHandler: this.collectionHandler,
         layoutHandler,
       })
     },
@@ -93,6 +115,11 @@ export default {
       {
         class: {
           'scroll-container': true,
+        },
+        style: {
+          [this.isHorizontal ? 'width' : 'height']: this.layoutSize
+            ? `${this.layoutSize}px`
+            : 'auto',
         },
       },
       [

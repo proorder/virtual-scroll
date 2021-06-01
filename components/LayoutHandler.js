@@ -2,14 +2,31 @@ export default class LayoutHandler {
   _scrollElement = null
   _layoutElement = null
 
+  _countOfStoragesScreens = 3
+
+  firstCallOccurred = false
+  layoutSize = {}
+
   constructor({ layoutElement, scrollElement }) {
     this._scrollElement = scrollElement
     this._layoutElement = layoutElement
-    console.log(this._layoutElement)
   }
 
-  computeLayoutSize() {
-    console.log(this.getParentContainerSize(), this.getElementSize())
+  computeLayoutSize({ page }) {
+    this.layoutSize[page] = this.getElementSize()
+    if (this.firstCallOccurred) {
+      return
+    }
+    this._countOfDisplayedElementsOnPage = Math.ceil(
+      this.getParentContainerSize() / this.layoutSize[page]
+    )
+    this.firstCallOccurred = true
+    return (
+      this._countOfDisplayedElementsOnPage *
+      this._countOfStoragesScreens *
+      3 * // Approximately how many times will the content stretch after filling with data
+      this.layoutSize[page]
+    )
   }
 
   getElementSize() {

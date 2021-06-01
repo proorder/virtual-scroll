@@ -3,18 +3,22 @@ export default class ScrollFacade {
   _layoutHandler = null
   _collectionHandler = null
 
+  currentPage = 1
+
   constructor({ scrollHandler, collectionHandler, layoutHandler }) {
     this._scrollHandler = scrollHandler
     this._collectionHandler = collectionHandler
     this._layoutHandler = layoutHandler
   }
 
-  getDisplayCollection(value = false) {
-    if (!value) {
+  getDisplayCollection({ collection, page }) {
+    if (!collection) {
       return this._collectionHandler.getDisplayCollection()
     }
 
-    this._collectionHandler.setCollection(value)
+    this.currentPage = page
+
+    this._collectionHandler.setCollection(collection)
 
     return {
       displayCollection: this._collectionHandler.getDisplayCollection(),
@@ -22,6 +26,9 @@ export default class ScrollFacade {
   }
 
   computeLayoutSize() {
-    this._layoutHandler.computeLayoutSize()
+    const layoutSize = this._layoutHandler.computeLayoutSize({
+      page: this.currentPage,
+    })
+    return layoutSize ? { layoutSize } : {}
   }
 }
