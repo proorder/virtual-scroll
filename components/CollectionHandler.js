@@ -24,6 +24,7 @@ export default class CollectionHandler {
         displayCollection.length < amount
           ? startIndex + displayCollection.length
           : null,
+      endMissingElementIndex: startIndex + amount - displayCollection.length,
     }
   }
 }

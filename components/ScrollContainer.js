@@ -80,14 +80,18 @@ export default {
     },
   },
   methods: {
-    // requireElements(elements) {
-    //   this.$emit('load', elements)
-    // },
+    requireElements(startIndex, endIndex) {
+      this.$emit('load', [startIndex, endIndex])
+    },
     fillCollection(collection, startIndex = this.startIndex) {
-      const { displayCollection } = this.getDisplayCollection(
-        collection,
-        startIndex
-      )
+      const {
+        displayCollection,
+        missingElementIndex,
+        endMissingElementIndex,
+      } = this.getDisplayCollection(collection, startIndex)
+      if (missingElementIndex) {
+        this.requireElements(missingElementIndex, endMissingElementIndex)
+      }
       this.$set(this, 'displayCollection', displayCollection)
       this.scrollFacade
         .initMutationObserver()
