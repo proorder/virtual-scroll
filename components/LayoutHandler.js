@@ -21,10 +21,7 @@ export default class LayoutHandler {
       return
     }
 
-    this._countOfDisplayedElementsOnPage = Math.ceil(
-      (this.getParentContainerSize() / this.getElementSize()) *
-        displayCollectionLength
-    )
+    this.calculateElementsOnScreen(displayCollectionLength)
 
     this.firstCallOccurred = true
     return (
@@ -62,6 +59,14 @@ export default class LayoutHandler {
         childList: true,
       })
     })
+  }
+
+  calculateElementsOnScreen(displayCollectionLength) {
+    const elementSizeCoeff = 0.8
+    const elementSize = this.getElementSize() * elementSizeCoeff
+    this._countOfDisplayedElementsOnPage = Math.ceil(
+      (this.getParentContainerSize() / elementSize) * displayCollectionLength
+    )
   }
 
   getDisplayCollectionLength({ min, total }) {

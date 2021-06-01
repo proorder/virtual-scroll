@@ -66,7 +66,6 @@ export default {
         }
       }
       load()
-      console.log(this.items.length)
       // Как-нибудь сгенерировать страницу
       // generatePage(page)
     },
