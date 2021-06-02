@@ -3,6 +3,8 @@ import ScrollHandler from './ScrollHandler'
 import LayoutHandler from './LayoutHandler'
 import CollectionHandler from './CollectionHandler'
 
+let handleScroll = null
+
 export default {
   name: 'ScrollContainer',
   props: {
@@ -79,6 +81,9 @@ export default {
       },
     },
   },
+  beforeDestroy() {
+    this.scrollElement.removeEventListener('scroll', handleScroll)
+  },
   methods: {
     requireElements(startIndex, endIndex) {
       this.$emit('load', [startIndex, endIndex])
@@ -96,10 +101,9 @@ export default {
       this.scrollFacade
         .initMutationObserver()
         .then(({ layoutSize, displayedElementsCount }) => {
-          if (!layoutSize) {
-            return
+          if (layoutSize) {
+            this.setLayoutSize(layoutSize)
           }
-          this.setLayoutSize(layoutSize)
           if (displayedElementsCount && displayedElementsCount > this.min) {
             this.fillCollection(collection, startIndex)
           }
@@ -119,10 +123,13 @@ export default {
     },
     initScrollFacade() {
       this.setupScrollElement()
-      const scrollHandler = new this.ScrollHandlerClass()
       const layoutHandler = new this.LayoutHandlerClass({
         scrollElement: this.scrollElement,
         layoutElement: this.$refs.transmitter,
+      })
+      const scrollHandler = new this.ScrollHandlerClass({
+        layoutHandler,
+        scrollElement: this.scrollElement,
       })
       this.collectionHandler = new this.CollectionHandlerClass({
         layoutHandler,
@@ -132,6 +139,13 @@ export default {
         collectionHandler: this.collectionHandler,
         layoutHandler,
       })
+      this.scrollFacade.setCollectionExtender(this.collectionExtender)
+
+      handleScroll = this.scrollFacade.handleScroll.bind(this.scrollFacade)
+      this.scrollElement.addEventListener('scroll', handleScroll)
+    },
+    collectionExtender(startIndex = this.startIndex /*, amount */) {
+      this.fillCollection(this.collection, startIndex)
     },
     setupScrollElement() {
       this.scrollElement = this.scrollSelector

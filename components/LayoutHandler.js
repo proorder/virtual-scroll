@@ -8,7 +8,7 @@ export default class LayoutHandler {
   mutationObserver = null
 
   firstCallOccurred = false
-  layoutSize = {}
+  layoutSize = null
 
   constructor({ layoutElement, scrollElement }) {
     this._scrollElement = scrollElement
@@ -47,6 +47,7 @@ export default class LayoutHandler {
           scopesCount,
           displayCollectionLength,
         })
+        this.handleMutationObserver(layoutSize)
         if (layoutSize) {
           this.mutationObserver.disconnect()
           resolve({
@@ -60,6 +61,8 @@ export default class LayoutHandler {
       })
     })
   }
+
+  handleMutationObserver(layoutSize) {}
 
   calculateElementsOnScreen(displayCollectionLength) {
     const elementSizeCoeff = 0.8

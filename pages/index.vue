@@ -66,8 +66,6 @@ export default {
         }
       }
       load()
-      // Как-нибудь сгенерировать страницу
-      // generatePage(page)
     },
     // async onLoadPage(page) {
     //   const promise = new Promise((resolve) => {

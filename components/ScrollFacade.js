@@ -3,6 +3,8 @@ export default class ScrollFacade {
   _layoutHandler = null
   _collectionHandler = null
 
+  _collectionExtenders = []
+
   displayCollectionLength = 0
   currentScope = 1
   scopesCount = 1
@@ -27,9 +29,15 @@ export default class ScrollFacade {
       )
     }
 
+    if (!this._scrollHandler.getScrollDiff()) {
+    } else {
+      this.displayCollectionLength =
+        this.displayCollectionLength + this._scrollHandler.getScrollDiff()
+    }
     this.displayCollectionLength = this._layoutHandler.getDisplayCollectionLength(
       { min: minDisplayCollection }
     )
+    this._scrollHandler.saveScroll()
 
     this.scopesCount = Math.ceil(total / this.displayCollectionLength)
 
@@ -46,5 +54,16 @@ export default class ScrollFacade {
       scopesCount: this.scopesCount,
       displayCollectionLength: this.displayCollectionLength,
     })
+  }
+
+  setCollectionExtender(collectionExtender) {
+    this._collectionExtenders.push(collectionExtender)
+  }
+
+  handleScroll(event) {
+    this._collectionExtenders.forEach((func) => {
+      func()
+    })
+    // this._scrollHandler.handleScroll(event)
   }
 }
