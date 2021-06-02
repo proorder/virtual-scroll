@@ -61,6 +61,7 @@ export default {
       scrollElement: null,
       scrollFacade: null,
       layoutSize: null,
+      layoutShift: 0,
     }
   },
   watch: {
@@ -85,6 +86,9 @@ export default {
     this.scrollElement.removeEventListener('scroll', handleScroll)
   },
   methods: {
+    layoutShifter(size) {
+      this.layoutShift = size
+    },
     requireElements(startIndex, endIndex) {
       this.$emit('load', [startIndex, endIndex])
     },
@@ -126,6 +130,7 @@ export default {
       const layoutHandler = new this.LayoutHandlerClass({
         scrollElement: this.scrollElement,
         layoutElement: this.$refs.transmitter,
+        layoutShifter: this.layoutShifter,
       })
       const scrollHandler = new this.ScrollHandlerClass({
         layoutHandler,
@@ -175,6 +180,10 @@ export default {
             class: {
               'scroll-container__transmitter': true,
               ...Object.fromEntries(this.classes.map((i) => [i, true])),
+            },
+            style: {
+              position: 'relative',
+              top: `${this.layoutShift}px`,
             },
             ref: 'transmitter',
           },

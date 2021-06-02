@@ -15,6 +15,10 @@ export default class ScrollHandler {
     this.lastScroll = this._scrollElement.scrollTop
   }
 
+  getScrollPosition() {
+    return this._scrollElement.scrollTop
+  }
+
   getScrollDiff() {
     return this._scrollElement.scrollTop - this.lastScroll
   }

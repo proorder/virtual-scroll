@@ -29,15 +29,28 @@ export default class ScrollFacade {
       )
     }
 
-    if (!this._scrollHandler.getScrollDiff()) {
-      this.displayCollectionLength = this._layoutHandler.getDisplayCollectionLength(
-        { min: minDisplayCollection }
+    if (this._scrollHandler.getScrollPosition()) {
+      startIndex = this._layoutHandler.calculateStartIndex(
+        this.displayCollectionLength,
+        this._scrollHandler.getScrollPosition()
       )
-    } else {
-      this.displayCollectionLength =
-        this.displayCollectionLength + this._scrollHandler.getScrollDiff()
+      this._layoutHandler.setLayoutShift(
+        this._scrollHandler.getScrollPosition()
+      )
     }
-    this._scrollHandler.saveScroll()
+    this._scrollHandler.getScrollPosition()
+    this.displayCollectionLength = this._layoutHandler.getDisplayCollectionLength(
+      { min: minDisplayCollection }
+    )
+    // if (!this._scrollHandler.getScrollDiff()) {
+    //   this.displayCollectionLength = this._layoutHandler.getDisplayCollectionLength(
+    //     { min: minDisplayCollection }
+    //   )
+    // } else {
+    //   this.displayCollectionLength =
+    //     this.displayCollectionLength + this._scrollHandler.getScrollDiff()
+    // }
+    // this._scrollHandler.saveScroll()
 
     this.scopesCount = Math.ceil(total / this.displayCollectionLength)
 
