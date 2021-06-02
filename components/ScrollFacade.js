@@ -30,13 +30,13 @@ export default class ScrollFacade {
     }
 
     if (!this._scrollHandler.getScrollDiff()) {
+      this.displayCollectionLength = this._layoutHandler.getDisplayCollectionLength(
+        { min: minDisplayCollection }
+      )
     } else {
       this.displayCollectionLength =
         this.displayCollectionLength + this._scrollHandler.getScrollDiff()
     }
-    this.displayCollectionLength = this._layoutHandler.getDisplayCollectionLength(
-      { min: minDisplayCollection }
-    )
     this._scrollHandler.saveScroll()
 
     this.scopesCount = Math.ceil(total / this.displayCollectionLength)
