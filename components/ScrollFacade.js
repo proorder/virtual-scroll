@@ -8,11 +8,17 @@ export default class ScrollFacade {
   displayCollectionLength = 0
   currentScope = 1
   scopesCount = 1
+  isFirstIteration = true
 
-  constructor({ scrollHandler, collectionHandler, layoutHandler }) {
+  _lastDisplayedIndex = null
+
+  _grid = 0
+
+  constructor({ scrollHandler, collectionHandler, layoutHandler, grid }) {
     this._scrollHandler = scrollHandler
     this._collectionHandler = collectionHandler
     this._layoutHandler = layoutHandler
+    this._grid = grid
   }
 
   getDisplayCollection({
@@ -29,29 +35,23 @@ export default class ScrollFacade {
       )
     }
 
-    if (this._scrollHandler.getScrollPosition()) {
+    const scrollPosition = this._scrollHandler.getScrollPosition()
+    // Если чуть проскролили
+    if (scrollPosition) {
+      // Посчитать стартовый индекс отталкиваясь от среднего размера одного элемента
       startIndex = this._layoutHandler.calculateStartIndex(
         this.displayCollectionLength,
-        this._scrollHandler.getScrollPosition()
+        scrollPosition
       )
-      this._layoutHandler.setLayoutShift(
-        this._scrollHandler.getScrollPosition()
-      )
+      // Установить отступ равный позиции скролла
+      this._layoutHandler.setLayoutShift(scrollPosition)
     }
-    this._scrollHandler.getScrollPosition()
+    // Получить длину коллекции
     this.displayCollectionLength = this._layoutHandler.getDisplayCollectionLength(
       { min: minDisplayCollection }
     )
-    // if (!this._scrollHandler.getScrollDiff()) {
-    //   this.displayCollectionLength = this._layoutHandler.getDisplayCollectionLength(
-    //     { min: minDisplayCollection }
-    //   )
-    // } else {
-    //   this.displayCollectionLength =
-    //     this.displayCollectionLength + this._scrollHandler.getScrollDiff()
-    // }
-    // this._scrollHandler.saveScroll()
 
+    // Посчитать сколько всего таких страниц есть
     this.scopesCount = Math.ceil(total / this.displayCollectionLength)
 
     this._collectionHandler.setCollection(collection)
@@ -73,10 +73,24 @@ export default class ScrollFacade {
     this._collectionExtenders.push(collectionExtender)
   }
 
+  getStartIndex() {
+    return this._layoutHandler.calculateStartIndex(
+      this.displayCollectionLength,
+      this._scrollHandler.getScrollPosition()
+    )
+  }
+
   handleScroll(event) {
-    this._collectionExtenders.forEach((func) => {
-      func()
-    })
+    // Получаются дергания
+    // if (this._grid && this.getStartIndex() < this._grid) {
+    //   return
+    // }
+    // if (!this._scrollHandler.getScrollPosition()) {
+    //   return
+    // }
+    // this._collectionExtenders.forEach((func) => {
+    //   func()
+    // })
     // this._scrollHandler.handleScroll(event)
   }
 }

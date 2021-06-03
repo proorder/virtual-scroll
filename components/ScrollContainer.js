@@ -8,6 +8,10 @@ let handleScroll = null
 export default {
   name: 'ScrollContainer',
   props: {
+    grid: {
+      type: Number,
+      default: 0,
+    },
     startIndex: {
       type: Number,
       default: 0,
@@ -143,6 +147,7 @@ export default {
         scrollHandler,
         collectionHandler: this.collectionHandler,
         layoutHandler,
+        grid: this.grid,
       })
       this.scrollFacade.setCollectionExtender(this.collectionExtender)
 

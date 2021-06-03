@@ -13,6 +13,8 @@
   },
   "dependencies": {
     "core-js": "^3.9.1",
+    "lodash.debounce": "^4.0.8",
+    "lodash.throttle": "^4.1.1",
     "nuxt": "^2.15.3",
     "stylus-loader": "4",
     "uuid": "^8.3.2"

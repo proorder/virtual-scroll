@@ -5,6 +5,7 @@
       :total="total",
       :collection="items",
       :classes="['page-items-list']",
+      :grid="4",
       scroll-selector="document",
       @load="onLoad"
     )
