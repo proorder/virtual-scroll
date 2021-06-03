@@ -2,7 +2,9 @@
 .page(ref="page")
   .scroll-container(ref="scroll", :style="{ height }")
     .scroll-transmitter(ref="tr", :style="{ transform: `translateY(${top}px)` }")
-      .element(v-for="item in collection", :key="item.name")
+      .element(v-for="item in collection", :key="item.name", :data="item.i")
+        .element__random(v-if="Math.random() > 0.5")
+          | {{ Array.from({ length: 10 }, () => Math.round(Math.random())).join('') }}
         | {{ item.name }}
 </template>
 
@@ -11,6 +13,7 @@ import debounce from 'lodash.debounce'
 
 const collection = Array.from({ length: 50 }, (i, k) => ({
   name: `Item: ${k}`,
+  i: k,
 }))
 
 export default {
@@ -141,4 +144,6 @@ body
   color #FFF
   box-sizing border-box
   font-size 12px
+  &__random
+    padding 5px 0
 </style>
