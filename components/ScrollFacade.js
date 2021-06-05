@@ -88,9 +88,9 @@ export default class ScrollFacade {
     // if (!this._scrollHandler.getScrollPosition()) {
     //   return
     // }
-    // this._collectionExtenders.forEach((func) => {
-    //   func()
-    // })
+    this._collectionExtenders.forEach((func) => {
+      func()
+    })
     // this._scrollHandler.handleScroll(event)
   }
 }

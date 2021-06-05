@@ -3,8 +3,8 @@
   .scroll-container(ref="scroll", :style="{ height }")
     .scroll-transmitter(ref="tr", :style="{ transform: `translateY(${top}px)` }")
       .element(v-for="item in collection", :key="item.name", :data="item.i")
-        .element__random(v-if="Math.random() > 0.5")
-          | {{ Array.from({ length: 10 }, () => Math.round(Math.random())).join('') }}
+        //.element__random(v-if="Math.random() > 0.5")
+        //  | {{ Array.from({ length: 10 }, () => Math.round(Math.random())).join('') }}
         | {{ item.name }}
 </template>
 
@@ -25,6 +25,9 @@ export default {
       endIndex: 15,
       oneScreenCount: 0,
       lastScrollPosition: null,
+      lastSavedScrollPosition: null,
+      loadDelta: 0,
+      scrollBusy: false,
     }
   },
   computed: {
@@ -50,9 +53,10 @@ export default {
           this.endIndex + this.oneScreenCount,
           collection.length - 1
         )
+        this.saveCenterElementPosition()
       })
     })
-    this.$refs.page.addEventListener('scroll', debounce(this.onScroll, 50))
+    this.$refs.page.addEventListener('scroll', debounce(this.onScroll))
     // const els = document.querySelectorAll('.element')
     // const firstPosition = els[0].getBoundingClientRect().top
     // const lastRect = els[els.length - 1].getBoundingClientRect()
@@ -61,39 +65,75 @@ export default {
   },
   methods: {
     onScroll(event) {
-      if (!this.lastScrollPosition) {
+      if (this.scrollBusy) {
+        return
+      }
+      this.scrollBusy = true
+      requestAnimationFrame(() => {
+        this.scrollBusy = false
+        if (!this.lastScrollPosition) {
+          this.lastScrollPosition = this.$refs.page.scrollTop
+          this.lastSavedScrollPosition = this.$refs.page.scrollTop
+          return
+        }
+        const diff = this.$refs.page.scrollTop - this.lastScrollPosition
+        const savedPos =
+          this.$refs.page.scrollTop - this.lastSavedScrollPosition
+        this.lastSavedScrollPosition = this.$refs.page.scrollTop
+        if (Math.abs(diff) < this.loadDelta) {
+          return
+        }
         this.lastScrollPosition = this.$refs.page.scrollTop
-        return
-      }
-      const diff = this.$refs.page.scrollTop - this.lastScrollPosition
-      this.lastScrollPosition = this.$refs.page.scrollTop
-      if (diff >= 0) {
-        this.onBottomScroll()
-        return
-      }
-      this.onTopScroll()
+        if (savedPos >= 0) {
+          console.log('Вниз')
+          this.onBottomScroll()
+          return
+        }
+        console.log('Вверх')
+        this.onTopScroll()
+      })
+    },
+    saveCenterElementPosition() {
+      const elementIndex =
+        Math.ceil(this.oneScreenCount / 2) + this.oneScreenCount
+      const { top: firstElTop } = this.$refs.tr.children[
+        this.oneScreenCount + 1
+      ].getBoundingClientRect()
+      const { top: centerElTop } = this.$refs.tr.children[
+        elementIndex
+      ].getBoundingClientRect()
+      this.loadDelta = centerElTop - firstElTop
     },
     onBottomScroll() {
-      const previousHeight = this.$refs.tr.offsetHeight
       const previousEndIndex = this.endIndex
       this.endIndex = Math.min(
-        this.endIndex + this.oneScreenCount,
+        this.endIndex + Math.floor(this.oneScreenCount / 2),
         collection.length - 1
       )
       this.$nextTick(() => {
-        this.top = this.top + this.$refs.tr.offsetHeight - previousHeight
+        const previousHeight = this.$refs.tr.offsetHeight
+        const scrollPosition = this.$refs.page.scrollTop
         this.startIndex = this.startIndex + this.endIndex - previousEndIndex
+        this.$nextTick(() => {
+          this.saveCenterElementPosition()
+          this.$refs.page.scrollTop = scrollPosition
+          this.top = this.top + previousHeight - this.$refs.tr.offsetHeight
+        })
       })
     },
     onTopScroll() {
       const previousHeight = this.$refs.tr.offsetHeight
       const scrollPosition = this.$refs.page.scrollTop
       const previousStartIndex = this.startIndex
-      this.startIndex = Math.max(0, this.startIndex - this.oneScreenCount)
+      this.startIndex = Math.max(
+        0,
+        this.startIndex - Math.floor(this.oneScreenCount / 2)
+      )
       this.$nextTick(() => {
         this.$refs.page.scrollTop = scrollPosition
         this.top = this.top + previousHeight - this.$refs.tr.offsetHeight
         this.endIndex = this.endIndex - (previousStartIndex - this.startIndex)
+        this.saveCenterElementPosition()
       })
     },
   },
@@ -134,10 +174,11 @@ body
     background violet
 .scroll-container
   background #9ab7ff
-  //display grid
-  //grid-template-columns repeat(1, 1fr)
-  //grid-column-gap 10px
-  //grid-row-gap 10px
+//.scroll-transmitter
+//  display grid
+//  grid-template-columns repeat(2, 1fr)
+//  grid-column-gap 10px
+//  grid-row-gap 10px
 .element
   padding 50px
   background-color #6d7b8e

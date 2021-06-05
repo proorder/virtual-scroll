@@ -91,7 +91,7 @@ body
   height 100vh
 .page-items-list
   display grid
-  grid-template-columns repeat(4, 1fr)
+  grid-template-columns repeat(1, 1fr)
   grid-column-gap 10px
   grid-row-gap 10px
 </style>
