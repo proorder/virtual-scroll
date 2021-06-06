@@ -1,5 +1,5 @@
 <template lang="pug">
-  .item-card
+  .item-card(:style="{ padding: `${Math.round(Math.random() * 15)}px` }")
     .item-card__title
       | {{ currentItem.title }}
     .item-card__content
@@ -41,7 +41,7 @@ export default {
 
 <style lang="stylus">
 .item-card
-  padding 10px
+  //padding 10px
   background-color #6d7b8e
   color #FFF
   box-sizing border-box
