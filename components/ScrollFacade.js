@@ -1,3 +1,5 @@
+import ScenarioManager from './ScenarioManager'
+
 export default class ScrollFacade {
   _scrollHandler = null
   _layoutHandler = null
@@ -6,7 +8,7 @@ export default class ScrollFacade {
 
   bindingHandleScroll = null
 
-  scenarios = []
+  scenarioManager = new ScenarioManager()
 
   setDisplayCollection = () => {}
 
@@ -26,6 +28,12 @@ export default class ScrollFacade {
   }
 
   setCollection({ collection, minDisplayCollection, total, index }) {
+    this.scenarioManager.createEvent('collectionUpdated', {
+      collection,
+      minDisplayCollection,
+      total,
+      index,
+    })
     // Передать в сценарий
     // this.scrollFacade
     //   .initMutationObserver()
