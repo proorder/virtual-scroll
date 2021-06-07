@@ -85,11 +85,9 @@ export default {
         }
         this.lastScrollPosition = this.$refs.page.scrollTop
         if (savedPos >= 0) {
-          console.log('Вниз')
           this.onBottomScroll()
           return
         }
-        console.log('Вверх')
         this.onTopScroll()
       })
     },

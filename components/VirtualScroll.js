@@ -3,16 +3,14 @@ import ScrollHandler from './ScrollHandler'
 import LayoutHandler from './LayoutHandler'
 import CollectionHandler from './CollectionHandler'
 
-let handleScroll = null
-
 export default {
-  name: 'ScrollContainer',
+  name: 'VirtualScroll',
   props: {
     grid: {
       type: Number,
       default: 0,
     },
-    startIndex: {
+    index: {
       type: Number,
       default: 0,
     },
@@ -20,9 +18,9 @@ export default {
       type: Number,
       default: 4,
     },
-    indexes: {
+    collection: {
       type: Array,
-      default: () => [null, null],
+      default: () => [],
     },
     total: {
       type: Number,
@@ -31,10 +29,6 @@ export default {
     scrollSelector: {
       type: [String, Object],
       default: null,
-    },
-    collection: {
-      type: Array,
-      default: () => [],
     },
     isTable: {
       type: Boolean,
@@ -59,10 +53,11 @@ export default {
   },
   data() {
     return {
-      collectionHandler: null,
       displayCollectionPromises: [],
       displayCollection: [],
       scrollElement: null,
+      collectionHandler: null,
+      scrollHandler: null,
       scrollFacade: null,
       layoutSize: null,
       layoutShift: 0,
@@ -71,91 +66,84 @@ export default {
   watch: {
     collection: {
       immediate: true,
-      handler(value) {
+      handler(collection) {
         if (!process.client) {
           return
         }
         if (this.scrollFacade) {
-          this.fillCollection(value)
+          this.scrollFacade.setCollection(this.buildContext(collection))
           return
         }
         this.$nextTick(() => {
           this.initScrollFacade()
-          this.fillCollection(value)
+          this.scrollFacade.setCollection(this.buildContext(collection))
         })
       },
     },
   },
   beforeDestroy() {
-    this.scrollElement.removeEventListener('scroll', handleScroll)
+    this.scrollFacade.destroyScroll()
   },
   methods: {
-    layoutShifter(size) {
-      this.layoutShift = size
-    },
-    requireElements(startIndex, endIndex) {
-      this.$emit('load', [startIndex, endIndex])
-    },
-    fillCollection(collection, startIndex = this.startIndex) {
-      const {
-        displayCollection,
-        missingElementIndex,
-        endMissingElementIndex,
-      } = this.getDisplayCollection(collection, startIndex)
-      if (missingElementIndex) {
-        this.requireElements(missingElementIndex, endMissingElementIndex)
-      }
-      this.$set(this, 'displayCollection', displayCollection)
-      this.scrollFacade
-        .initMutationObserver()
-        .then(({ layoutSize, displayedElementsCount }) => {
-          if (layoutSize) {
-            this.setLayoutSize(layoutSize)
-          }
-          if (displayedElementsCount && displayedElementsCount > this.min) {
-            this.fillCollection(collection, startIndex)
-          }
-        })
-    },
-    getDisplayCollection(collection, startIndex) {
-      return this.scrollFacade.getDisplayCollection({
+    buildContext(collection = this.collection) {
+      return {
         collection,
-        indexes: this.indexes,
         total: this.total,
         minDisplayCollection: this.min,
-        startIndex,
-      })
+        index: this.index,
+      }
+    },
+    setDisplayCollection({ displayCollection }) {
+      this.$set(this, 'displayCollection', displayCollection)
+      if (!displayCollection.length) {
+        return
+      }
+      this.$emit('view', [
+        displayCollection[0].index,
+        displayCollection[displayCollection.length - 1].index,
+      ])
     },
     setLayoutSize(layoutSize) {
       this.layoutSize = layoutSize
     },
+    setLayoutShift(size) {
+      this.layoutShift = size
+    },
     initScrollFacade() {
       this.setupScrollElement()
+      const {
+        scrollHandler,
+        collectionHandler,
+        layoutHandler,
+      } = this.initScrollHandlers()
+      this.scrollFacade = new ScrollFacade({
+        scrollHandler,
+        collectionHandler,
+        layoutHandler,
+        setDisplayCollection: this.setDisplayCollection,
+        grid: this.grid,
+      })
+      this.scrollFacade.initScroll()
+    },
+    initScrollHandlers() {
       const layoutHandler = new this.LayoutHandlerClass({
         scrollElement: this.scrollElement,
         layoutElement: this.$refs.transmitter,
-        layoutShifter: this.layoutShifter,
+        setLayoutShift: this.setLayoutShift,
+        setLayoutSize: this.setLayoutSize,
       })
-      const scrollHandler = new this.ScrollHandlerClass({
+      this.scrollHandler = new this.ScrollHandlerClass({
         layoutHandler,
         scrollElement: this.scrollElement,
       })
       this.collectionHandler = new this.CollectionHandlerClass({
         layoutHandler,
       })
-      this.scrollFacade = new ScrollFacade({
-        scrollHandler,
+      return {
+        scrollHandler: this.scrollHandler,
         collectionHandler: this.collectionHandler,
         layoutHandler,
-        grid: this.grid,
-      })
-      this.scrollFacade.setCollectionExtender(this.collectionExtender)
-
-      handleScroll = this.scrollFacade.handleScroll.bind(this.scrollFacade)
-      this.scrollElement.addEventListener('scroll', handleScroll)
-    },
-    collectionExtender(startIndex = this.startIndex /*, amount */) {
-      this.fillCollection(this.collection, startIndex)
+      }
     },
     setupScrollElement() {
       this.scrollElement = this.scrollSelector
