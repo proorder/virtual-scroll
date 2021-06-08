@@ -1,3 +1,5 @@
+import cloneDeep from 'lodash.clonedeep'
+import deepEqual from 'fast-deep-equal'
 import ScrollFacade from './ScrollFacade'
 import ScrollHandler from './ScrollHandler'
 import LayoutHandler from './LayoutHandler'
@@ -67,7 +69,14 @@ export default {
     collection: {
       immediate: true,
       handler(collection) {
-        if (!process.client) {
+        if (
+          !process.client ||
+          (this.scrollFacade &&
+            deepEqual(
+              collection.map(({ index: i }) => i),
+              this.scrollFacade.currentCollection.map(({ index: i }) => i)
+            ))
+        ) {
           return
         }
         if (this.scrollFacade) {
@@ -82,26 +91,26 @@ export default {
     },
   },
   beforeDestroy() {
-    this.scrollFacade.destroyScroll()
+    if (this.scrollFacade) {
+      this.scrollFacade.destroyScroll()
+    }
   },
   methods: {
     buildContext(collection = this.collection) {
       return {
-        collection,
+        collection: cloneDeep(collection),
         total: this.total,
         minDisplayCollection: this.min,
         index: this.index,
+        setDisplayCollection: this.setDisplayCollection,
       }
     },
-    setDisplayCollection({ displayCollection }) {
+    setDisplayCollection({ displayCollection, viewingIndexes }) {
       this.$set(this, 'displayCollection', displayCollection)
       if (!displayCollection.length) {
         return
       }
-      this.$emit('view', [
-        displayCollection[0].index,
-        displayCollection[displayCollection.length - 1].index,
-      ])
+      this.$emit('view', viewingIndexes)
     },
     setLayoutSize(layoutSize) {
       this.layoutSize = layoutSize

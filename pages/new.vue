@@ -4,9 +4,9 @@
       :total="total",
       :collection="items",
       :classes="['page-items-list']",
-      :grid="4",
+      :grid="3",
       scroll-selector="document",
-      @load="onLoad"
+      @view="onChangeView"
     )
       template(#default="{ displayCollection }")
         item-card(
@@ -56,7 +56,34 @@ export default {
       this.loadedPagesHistory = [...this.loadedPagesHistory, value].sort()
     },
   },
+  // created() {
+  //   generatePage(1).forEach((item) => {
+  //     this.items[item.index] = item
+  //   })
+  // },
   methods: {
+    onChangeView([startIndex, endIndex]) {
+      const page = Math.ceil(endIndex / itemsList.length)
+      const lastLoadedPages = this.loadedPagesHistory[
+        this.loadedPagesHistory.length - 1
+      ]
+      const pages = Array.from(
+        { length: page - lastLoadedPages },
+        (i, k) => k + 1 + lastLoadedPages
+      )
+      pages
+        .filter((p) => !this.loadedPagesHistory.includes(p))
+        .forEach((page) => {
+          // generatePage(page).forEach((item) => {
+          //   this.items[item.index] = item
+          // })
+          this.pushItemsToCollection(generatePage(page))
+        })
+      this.loadedPagesHistory = [...this.loadedPagesHistory, ...pages].sort(
+        (a, b) => a - b
+      )
+      // this.$set(this, 'items', this.items)
+    },
     onLoad(startIndex, endIndex) {
       const load = () => {
         this.page = this.page + 1
@@ -74,7 +101,9 @@ export default {
     //   this.pushItemsToCollection(await promise)
     // },
     pushItemsToCollection(items) {
-      this.items.push(...items)
+      items.forEach((item) => {
+        this.items.push(item)
+      })
     },
   },
 }

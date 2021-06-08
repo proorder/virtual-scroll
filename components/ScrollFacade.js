@@ -8,9 +8,13 @@ export default class ScrollFacade {
 
   bindingHandleScroll = null
 
-  scenarioManager = new ScenarioManager()
+  scenarioManager = null
 
   setDisplayCollection = () => {}
+
+  get currentCollection() {
+    return this._collectionHandler._collection
+  }
 
   constructor({
     scrollHandler,
@@ -25,9 +29,25 @@ export default class ScrollFacade {
     this._grid = grid
 
     this.setDisplayCollection = setDisplayCollection
+
+    this.scenarioManager = new ScenarioManager(
+      this.buildContextForScenarioManager()
+    )
+  }
+
+  buildContextForScenarioManager() {
+    return {
+      scrollHandler: this._scrollHandler,
+      collectionHandler: this._collectionHandler,
+      layoutHandler: this._layoutHandler,
+      setDisplayCollection: this.setDisplayCollection,
+      grid: this._grid,
+    }
   }
 
   setCollection({ collection, minDisplayCollection, total, index }) {
+    this._collectionHandler.setContext({ total, index })
+    this._collectionHandler.setCollection(collection)
     this.scenarioManager.createEvent('collectionUpdated', {
       collection,
       minDisplayCollection,
@@ -62,5 +82,7 @@ export default class ScrollFacade {
     )
   }
 
-  handleScroll() {}
+  handleScroll() {
+    this.scenarioManager.createEvent('scroll')
+  }
 }

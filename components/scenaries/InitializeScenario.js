@@ -1,21 +1,28 @@
 import Scenario from '../Scenario'
 
 export default class InitializeScenario extends Scenario {
-  stateMachine() {}
+  priority = Scenario.PRIORITIES.SUPER_HIGH
 
-  async process() {
-    this.setDisplayCollection(this.index, this.minDisplayedEls)
-    await this.mutationHasOccurred()
-    const elementSize = this.computeOneElementSize(this.minDisplayedEls)
-    const layoutSize = this.computeLayoutSize(
-      elementSize,
-      this.collectionLength
+  stateMachine() {
+    return !this._layoutHandler.firstCallOccurred
+  }
+
+  async process({ minDisplayCollection }) {
+    const { layoutSize } = await this.setDisplayCollection(
+      this.index,
+      minDisplayCollection || this.minDisplayedEls
     )
-    this.setLayoutSize(layoutSize)
-    this.computeOneScreenElementsCount()
-    this.setOffset()
-    this.setDisplayCollectionPrefix()
-    this.setDisplayCollectionSuffix()
+    await this.setLayoutSize(layoutSize)
+    const oneElementSize = this.computeOneElementSize()
+    const oneScreenElsCount = this.computeOneScreenElementsCount(oneElementSize)
+    let result
+    while (!result) {
+      result = await this.setDisplayCollection(this.index, oneScreenElsCount)
+    }
+
+    // this.setOffset()
+    // this.setDisplayCollectionPrefix()
+    // this.setDisplayCollectionSuffix()
   }
 
   // Смещает начальный индекс отображаемой коллекции к началу
