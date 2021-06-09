@@ -54,17 +54,6 @@ export default class ScrollFacade {
       total,
       index,
     })
-    // Передать в сценарий
-    // this.scrollFacade
-    //   .initMutationObserver()
-    //   .then(({ layoutSize, displayedElementsCount }) => {
-    //     if (layoutSize) {
-    //       this.setLayoutSize(layoutSize)
-    //     }
-    //     if (displayedElementsCount && displayedElementsCount > this.min) {
-    //       this.fillCollection(collection, startIndex)
-    //     }
-    //   })
   }
 
   initScroll() {

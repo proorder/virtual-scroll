@@ -14,7 +14,7 @@ export default {
     },
     index: {
       type: Number,
-      default: 0,
+      default: 50,
     },
     min: {
       type: Number,
@@ -107,9 +107,9 @@ export default {
     },
     setDisplayCollection({ displayCollection, viewingIndexes }) {
       this.$set(this, 'displayCollection', displayCollection)
-      if (!displayCollection.length) {
-        return
-      }
+      // if (!displayCollection.length) {
+      //   return
+      // }
       this.$emit('view', viewingIndexes)
     },
     setLayoutSize(layoutSize) {

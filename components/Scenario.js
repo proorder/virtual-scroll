@@ -71,15 +71,31 @@ export default class Scenario {
       promise: null,
       resolve: null,
     }
-    this.subscribers.collection.promise = new Promise((resolve) => {
+    const promise1 = new Promise((resolve) => {
       this.subscribers.collection.resolve = resolve
     })
-    return new Promise((resolve) => {
-      this.subscribers.collection.promise.then(resolve)
+    let p
+    // eslint-disable-next-line prefer-const
+    p = new Promise((resolve) => {
+      console.log('инициализируем промис p')
+
+      promise1.then(() => {
+        console.log('первый промис')
+        resolve('пишов нахуй')
+      })
       this._layoutHandler
         .initMutationObserver(this.computeLayoutSizeContext())
-        .then(resolve)
+        .then((result) => {
+          setTimeout(() => {
+            console.log('Сча резолв', result, p)
+          }, 1000)
+          return resolve(result)
+        })
     })
+    setTimeout(() => {
+      console.log('P', p)
+    }, 10000)
+    return p
   }
 
   computeLayoutSizeContext() {
@@ -112,7 +128,7 @@ export default class Scenario {
       return
     }
     const resolve = this.subscribers.collection.resolve
-    this.subscribers.collection = null
+    // this.subscribers.collection = null
     resolve()
   }
 

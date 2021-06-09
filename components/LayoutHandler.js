@@ -72,7 +72,7 @@ export default class LayoutHandler {
   }
 
   initMutationObserver({ total, displayCollectionLength }) {
-    return new Promise((resolve) => {
+    const promise = new Promise((resolve) => {
       this.mutationObserver = new MutationObserver(() => {
         if (!this._layoutElement.offsetHeight) {
           return
@@ -84,6 +84,7 @@ export default class LayoutHandler {
         this.handleMutationObserver(layoutSize)
         if (layoutSize) {
           this.mutationObserver.disconnect()
+          console.log('Резолв наблюдателя', promise)
           resolve({
             layoutSize,
             // TODO: Реализовать установку данного свойства
@@ -95,6 +96,7 @@ export default class LayoutHandler {
         childList: true,
       })
     })
+    return promise
   }
 
   handleMutationObserver(layoutSize) {
