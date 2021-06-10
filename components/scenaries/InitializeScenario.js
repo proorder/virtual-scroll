@@ -9,18 +9,10 @@ export default class InitializeScenario extends Scenario {
 
   async process({ minDisplayCollection, index }) {
     await this.setDisplayCollection(index, minDisplayCollection)
-    console.log('Приступил к выполнению')
-    let layoutSize
-    try {
-      const result = await this.setDisplayCollection(
-        index,
-        minDisplayCollection
-      )
-      layoutSize = result.layoutSize
-    } catch (err) {
-      console.log('Ошибка резолва', err)
-    }
-    console.log('Должен быть выполнен')
+    const { layoutSize } = await this.setDisplayCollection(
+      index,
+      minDisplayCollection
+    )
     await this.setLayoutSize(layoutSize)
     const oneElementSize = this.computeOneElementSize()
     const oneScreenElsCount = this.computeOneScreenElementsCount(oneElementSize)
