@@ -19,10 +19,6 @@ export default class LayoutHandler {
   }
 
   computeLayoutSize({ total, displayCollectionLength }) {
-    if (this.firstCallOccurred) {
-      return
-    }
-
     this.firstCallOccurred = true
     return (
       Math.ceil(total / displayCollectionLength) *
@@ -72,7 +68,10 @@ export default class LayoutHandler {
   }
 
   initMutationObserver({ total, displayCollectionLength }) {
-    const promise = new Promise((resolve) => {
+    return new Promise((resolve) => {
+      if (this.mutationObserver) {
+        this.mutationObserver.disconnect()
+      }
       this.mutationObserver = new MutationObserver(() => {
         if (!this._layoutElement.offsetHeight) {
           return
@@ -84,7 +83,6 @@ export default class LayoutHandler {
         this.handleMutationObserver(layoutSize)
         if (layoutSize) {
           this.mutationObserver.disconnect()
-          console.log('Резолв наблюдателя', promise)
           resolve({
             layoutSize,
             // TODO: Реализовать установку данного свойства
@@ -96,7 +94,6 @@ export default class LayoutHandler {
         childList: true,
       })
     })
-    return promise
   }
 
   handleMutationObserver(layoutSize) {

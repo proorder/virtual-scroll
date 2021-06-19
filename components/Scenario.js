@@ -56,7 +56,11 @@ export default class Scenario {
   }
 
   // Устанавливает отступ для контейнера элементов
-  setOffset() {}
+  setOffset() {
+    this._scrollHandler.setScroll(
+      this._layoutHandler.oneElementSize * this._collectionHandler.index
+    )
+  }
 
   // Получает коллекцию из CollectionHandler.
   // Вызывает _setDisplayCollection, тем самым выводит коллекцию на дисплей.
@@ -71,6 +75,7 @@ export default class Scenario {
       promise: null,
       resolve: null,
     }
+
     this.subscribers.collection.promise = new Promise((resolve) => {
       this.subscribers.collection.resolve = resolve
     })

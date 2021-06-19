@@ -12,4 +12,8 @@ export default class ScrollHandler {
     this._scrollElement = getScrollElement(scrollElement)
     this._layoutHandler = layoutHandler
   }
+
+  setScroll(value) {
+    this.scrollElement.scrollTop = value
+  }
 }
