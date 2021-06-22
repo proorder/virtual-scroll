@@ -5,16 +5,16 @@ export default class LayoutHandler {
   _countOfDisplayedElementsOnPage = null
 
   firstCallOccurred = false
-  _layoutShifter = null
+  _setLayoutShift = null
   layoutSize = null
   oneElementSize = null
 
   _setLayoutSize = (layoutSize) => {}
 
-  constructor({ layoutElement, scrollElement, layoutShifter, setLayoutSize }) {
+  constructor({ layoutElement, scrollElement, setLayoutShift, setLayoutSize }) {
     this._scrollElement = scrollElement
     this._layoutElement = layoutElement
-    this._layoutShifter = layoutShifter
+    this._setLayoutShift = setLayoutShift
     this._setLayoutSize = setLayoutSize
   }
 
@@ -47,6 +47,10 @@ export default class LayoutHandler {
 
   setLayoutSize(layoutSize = this.layoutSize) {
     this._setLayoutSize(layoutSize)
+  }
+
+  setLayoutShift(shift) {
+    this._setLayoutShift(shift)
   }
 
   getElementSize() {

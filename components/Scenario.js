@@ -2,6 +2,7 @@ export default class Scenario {
   _scrollHandler = null
   _layoutHandler = null
   _collectionHandler = null
+  _scenarioManager = null
 
   static PRIORITIES = {
     SUPER_HIGH: 5,
@@ -9,6 +10,10 @@ export default class Scenario {
     NORMAL: 3,
     LOW: 2,
     INDIFFERENCE: 1,
+  }
+
+  static EVENTS = {
+    SCROLL: 'scroll',
   }
 
   priority = Scenario.PRIORITIES.INDIFFERENCE
@@ -25,6 +30,18 @@ export default class Scenario {
   // Массив промисов, по результатам выполнения которых возобновляется process
   subscribers = {
     collection: null,
+  }
+
+  set manager(manager) {
+    this._scenarioManager = manager
+  }
+
+  get manager() {
+    return this._scenarioManager
+  }
+
+  finishProcess() {
+    this.manager.finishProcess(this)
   }
 
   // Передается из virtual-scroll компонента. Устанавливает коллекцию.
@@ -47,6 +64,18 @@ export default class Scenario {
     )
   }
 
+  getLastScrollPosition() {
+    return this._scrollHandler.scroll
+  }
+
+  getContainerSize() {
+    return this._layoutHandler.getElementSize()
+  }
+
+  getLastScrollPosition() {
+    return this._scrollHandler.scroll
+  }
+
   // Устанавливает размер полосы прокрутки
   setLayoutSize(layoutSize) {
     this._layoutHandler.setLayoutSize(layoutSize)
@@ -55,11 +84,21 @@ export default class Scenario {
     })
   }
 
+  setLayoutShift(layoutShift) {
+    this._layoutHandler.setLayoutShift(layoutShift)
+  }
+
   // Устанавливает отступ для контейнера элементов
-  setOffset() {
-    this._scrollHandler.setScroll(
-      this._layoutHandler.oneElementSize * this._collectionHandler.index
-    )
+  setOffset(fromPoint = 0) {
+    let offset
+    if (fromPoint && this._scrollHandler.scroll) {
+      offset = this._scrollHandler.scroll
+    } else {
+      offset =
+        this._layoutHandler.oneElementSize * this._collectionHandler.index
+    }
+    this._scrollHandler.scroll = offset
+    this.setLayoutShift(offset + fromPoint)
   }
 
   // Получает коллекцию из CollectionHandler.
@@ -85,6 +124,14 @@ export default class Scenario {
         .initMutationObserver(this.computeLayoutSizeContext())
         .then(resolve)
     })
+  }
+
+  async displayCollection(index, length) {
+    let result
+    while (!result) {
+      result = await this.setDisplayCollection(index, length)
+    }
+    return result
   }
 
   computeLayoutSizeContext() {

@@ -58,17 +58,19 @@ export default class ScrollFacade {
 
   initScroll() {
     this.bindingHandleScroll = this.handleScroll.bind(this)
-    this._scrollHandler.scrollElement.addEventListener(
-      'scroll',
-      this.bindingHandleScroll
-    )
+    const scrollElement =
+      this._scrollHandler.scrollElement instanceof HTMLHtmlElement
+        ? document
+        : this._scrollHandler.scrollElement
+    scrollElement.addEventListener('scroll', this.bindingHandleScroll)
   }
 
   destroyScroll() {
-    this._scrollHandler.scrollElement.removeEventListener(
-      'scroll',
-      this.bindingHandleScroll
-    )
+    const scrollElement =
+      this._scrollHandler.scrollElement instanceof HTMLHtmlElement
+        ? document
+        : this._scrollHandler.scrollElement
+    scrollElement.removeEventListener('scroll', this.bindingHandleScroll)
   }
 
   handleScroll() {

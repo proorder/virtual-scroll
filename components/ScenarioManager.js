@@ -1,24 +1,37 @@
 import InitializeScenario from './scenaries/InitializeScenario'
+import BackScrollScenario from './scenaries/BackScrollScenario'
 
 export default class ScenarioManager {
   scenaries = []
 
-  currentScenario = null
+  inProgressScenarios = {}
 
   constructor(contextObject) {
     this.scenaries.push(new InitializeScenario(contextObject))
+    this.scenaries.push(new BackScrollScenario(contextObject))
   }
 
   createEvent(event, payload) {
-    if (!this.currentScenario) {
-      this.executeScenarioSelection()
+    if (!this.inProgressScenarios.length) {
+      this.executeScenarioSelection(event)
     }
-    this.currentScenario.processEvent(event, payload)
+    Object.entries(this.inProgressScenarios).forEach(([k, s]) =>
+      s.processEvent(event, payload)
+    )
   }
 
-  executeScenarioSelection() {
-    this.currentScenario = this.scenaries
+  executeScenarioSelection(event) {
+    const currentScenario = this.scenaries
       .sort((a, b) => a.priority - b.priority)
-      .find((s) => s.stateMachine())
+      .find((s) => !!s.stateMachine(event))
+    if (!currentScenario) {
+      return
+    }
+    currentScenario.manager = this
+    this.inProgressScenarios[currentScenario.constructor.name] = currentScenario
+  }
+
+  finishProcess(classInstance) {
+    delete this.inProgressScenarios[classInstance.constructor.name]
   }
 }

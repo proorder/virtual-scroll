@@ -1,6 +1,8 @@
 export function getScrollElement(element) {
-  if (element instanceof Window) {
-    return document.scrollingElement
+  switch (true) {
+    case element instanceof Window:
+      return document.scrollingElement
+    default:
+      return element
   }
-  return element
 }

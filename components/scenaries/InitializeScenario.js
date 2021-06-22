@@ -8,28 +8,40 @@ export default class InitializeScenario extends Scenario {
   }
 
   async process({ minDisplayCollection, index }) {
-    let layoutSize
-    while (!layoutSize) {
-      const result = await this.setDisplayCollection(
-        index,
-        minDisplayCollection
-      )
-      layoutSize = result && result.layoutSize
-    }
+    // Команда: Вывести на экран минимальное количество элементов.
+    // Комментарий: Это действие совершается для того, чтобы определить размер
+    // одного элемента, учитывая сетку.
+    const { layoutSize } = await this.displayCollection(
+      index,
+      minDisplayCollection
+    )
+    // Команда: Установить размер лэйаута
+    // Комментарий: Во избежании layout shift браузера
+    // при заполнении коллекции элементами, создается запас размера
     await this.setLayoutSize(layoutSize)
     const oneElementSize = this.computeOneElementSize()
+    // Команда: Вычислить приблизительное количество элементов на одном экране
     const oneScreenElsCount = this.computeOneScreenElementsCount(oneElementSize)
     const halfScreenEls = Math.ceil(oneScreenElsCount / 2)
-    let result
-    while (!result) {
-      result = await this.setDisplayCollection(
-        index,
-        oneScreenElsCount + halfScreenEls
-      )
-    }
+    // Команда: Вывести полтора экрана элементов
+    await this.displayCollection(index, oneScreenElsCount + halfScreenEls)
+    const previousContainerSize = this.getContainerSize()
     this.setOffset()
-    // this.setDisplayCollectionPrefix()
-    // this.setDisplayCollectionSuffix()
+    // Команда: Сместить начальный индекс,
+    // увеличить отображаемое количество элементов
+    await this.displayCollection(
+      Math.max(index - halfScreenEls, 0),
+      oneScreenElsCount + halfScreenEls * 2
+    )
+    // Команда: Сместить отступ контейнера
+    this.setLayoutShift(
+      this.getLastScrollPosition() +
+        previousContainerSize -
+        this.getContainerSize()
+    )
+
+    // Команда: Завершить процесс. Удалить из стэка выполняемых
+    this.finishProcess()
   }
 
   // Смещает начальный индекс отображаемой коллекции к началу

@@ -8,13 +8,13 @@ export default class LayoutHandler {
   mutationObserver = null
 
   firstCallOccurred = false
-  _layoutShifter = null
+  _setLayoutShift = null
   layoutSize = null
 
-  constructor({ layoutElement, scrollElement, layoutShifter }) {
+  constructor({ layoutElement, scrollElement, setLayoutShift }) {
     this._scrollElement = scrollElement
     this._layoutElement = layoutElement
-    this._layoutShifter = layoutShifter
+    this._setLayoutShift = setLayoutShift
   }
 
   computeLayoutSize({ scopesCount, displayCollectionLength }) {
@@ -66,8 +66,8 @@ export default class LayoutHandler {
 
   handleMutationObserver(layoutSize) {}
 
-  setLayoutShift(size) {
-    this._layoutShifter(size)
+  setLayoutShift(shift) {
+    this._setLayoutShift(shift)
   }
 
   calculateStartIndex(displayCollectionLength, space) {
