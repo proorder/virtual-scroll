@@ -184,8 +184,9 @@ export default {
               ...Object.fromEntries(this.classes.map((i) => [i, true])),
             },
             style: {
-              position: 'relative',
-              top: `${this.layoutShift}px`,
+              transform: `translateY(${this.layoutShift}px)`,
+              // position: 'relative',
+              // top: `${this.layoutShift}px`,
             },
             ref: 'transmitter',
           },

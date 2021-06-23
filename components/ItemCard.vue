@@ -1,5 +1,5 @@
 <template lang="pug">
-  .item-card(:style="{ padding: `${Math.round(Math.random() * 15)}px` }")
+  .item-card(:style="{ padding: `${item.random}px` }")
     .item-card__title
       | {{ currentItem.title }}
     .item-card__content

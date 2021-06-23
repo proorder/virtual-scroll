@@ -22,7 +22,10 @@ export default class InitializeScenario extends Scenario {
     const oneElementSize = this.computeOneElementSize()
     // Команда: Вычислить приблизительное количество элементов на одном экране
     const oneScreenElsCount = this.computeOneScreenElementsCount(oneElementSize)
-    const halfScreenEls = Math.ceil(oneScreenElsCount / 2)
+    // Данное количество, отнимаемое от index будет являться
+    // фактическим начальным индексом. Соотвественно должно отталкиваться от
+    // grid
+    const halfScreenEls = this.getHalfScreenEls(index, oneScreenElsCount)
     // Команда: Вывести полтора экрана элементов
     await this.displayCollection(index, oneScreenElsCount + halfScreenEls)
     this.setOffset()
@@ -42,6 +45,12 @@ export default class InitializeScenario extends Scenario {
 
     // Команда: Завершить процесс. Удалить из стэка выполняемых
     this.finishProcess()
+  }
+
+  getHalfScreenEls(index, oneScreenElsCount) {
+    const half = Math.ceil(oneScreenElsCount / 2)
+    const delta = index - half - ((index - half) % this.grid)
+    return index - delta
   }
 
   // Смещает начальный индекс отображаемой коллекции к началу

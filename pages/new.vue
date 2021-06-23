@@ -26,6 +26,7 @@ function generatePage(page) {
     newItem.id = uuid()
     newItem.title = `${item.title} Page ${page}`
     newItem.index = itemsList.length * (page - 1) + index
+    newItem.random = Math.round(Math.random() * 15)
     return newItem
   })
 }
