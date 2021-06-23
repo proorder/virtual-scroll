@@ -1,3 +1,4 @@
+import debounce from 'lodash.debounce'
 import ScenarioManager from './ScenarioManager'
 
 export default class ScrollFacade {
@@ -57,7 +58,7 @@ export default class ScrollFacade {
   }
 
   initScroll() {
-    this.bindingHandleScroll = this.handleScroll.bind(this)
+    this.bindingHandleScroll = debounce(this.handleScroll.bind(this), 250)
     const scrollElement =
       this._scrollHandler.scrollElement instanceof HTMLHtmlElement
         ? document

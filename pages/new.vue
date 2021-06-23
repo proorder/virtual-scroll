@@ -63,6 +63,12 @@ export default {
   // },
   methods: {
     onChangeView([startIndex, endIndex]) {
+      if (
+        this.items.find((i) => i.index === startIndex) &&
+        this.items.find((i) => i.index === endIndex)
+      ) {
+        return
+      }
       const page = Math.ceil(endIndex / itemsList.length)
       const lastLoadedPages = this.loadedPagesHistory[
         this.loadedPagesHistory.length - 1

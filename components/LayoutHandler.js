@@ -9,6 +9,16 @@ export default class LayoutHandler {
   layoutSize = null
   oneElementSize = null
 
+  _layoutShift = null
+
+  set layoutShift(value) {
+    this._layoutShift = value
+  }
+
+  get layoutShift() {
+    return this._layoutShift
+  }
+
   _setLayoutSize = (layoutSize) => {}
 
   constructor({ layoutElement, scrollElement, setLayoutShift, setLayoutSize }) {
@@ -50,6 +60,7 @@ export default class LayoutHandler {
   }
 
   setLayoutShift(shift) {
+    this.layoutShift = shift
     this._setLayoutShift(shift)
   }
 

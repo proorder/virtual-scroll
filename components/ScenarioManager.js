@@ -12,7 +12,7 @@ export default class ScenarioManager {
   }
 
   createEvent(event, payload) {
-    if (!this.inProgressScenarios.length) {
+    if (!Object.keys(this.inProgressScenarios).length) {
       this.executeScenarioSelection(event)
     }
     Object.entries(this.inProgressScenarios).forEach(([k, s]) =>

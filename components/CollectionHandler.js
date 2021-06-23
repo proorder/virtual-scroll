@@ -3,6 +3,7 @@ export default class CollectionHandler {
   total = 0
   index = 0
 
+  lastDisplayedIndex = 0
   _collection = []
 
   setContext({ total, index }) {
@@ -19,6 +20,7 @@ export default class CollectionHandler {
   }
 
   getDisplayCollection(startIndex, amount) {
+    this.lastDisplayedIndex = startIndex
     this.lastRequiredCollectionLength = amount
     const displayCollection = this._collection
       .slice(startIndex, startIndex + amount)

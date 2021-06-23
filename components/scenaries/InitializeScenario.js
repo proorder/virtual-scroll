@@ -25,8 +25,8 @@ export default class InitializeScenario extends Scenario {
     const halfScreenEls = Math.ceil(oneScreenElsCount / 2)
     // Команда: Вывести полтора экрана элементов
     await this.displayCollection(index, oneScreenElsCount + halfScreenEls)
-    const previousContainerSize = this.getContainerSize()
     this.setOffset()
+    const previousContainerSize = this.getContainerSize()
     // Команда: Сместить начальный индекс,
     // увеличить отображаемое количество элементов
     await this.displayCollection(

@@ -47,6 +47,14 @@ export default class Scenario {
   // Передается из virtual-scroll компонента. Устанавливает коллекцию.
   _setDisplayCollection = ({ displayCollection }) => {}
 
+  get lastDisplayedIndex() {
+    return this._collectionHandler.lastDisplayedIndex
+  }
+
+  get lastCollectionLength() {
+    return this._collectionHandler.lastRequiredCollectionLength
+  }
+
   // Methods
   // Вычисляет приблизительный размер одного элемента
   computeOneElementSize() {
@@ -54,6 +62,10 @@ export default class Scenario {
       this._collectionHandler.lastRequiredCollectionLength,
       this.grid
     )
+  }
+
+  get oneElementSize() {
+    return this._layoutHandler.oneElementSize
   }
 
   // Вычисляет какое приблизительное число элементов может поместиться на одном экране
@@ -64,16 +76,25 @@ export default class Scenario {
     )
   }
 
+  get oneScreenElsCount() {
+    return this._layoutHandler._countOfDisplayedElementsOnPage
+  }
+
+  setLastScrollPosition(value = false) {
+    this._scrollHandler.setLastScrollPosition =
+      typeof value === 'boolean' ? this.getScrollPosition() : value
+  }
+
   getLastScrollPosition() {
     return this._scrollHandler.scroll
+  }
+
+  getScrollPosition() {
+    return this._scrollHandler.getScrollPosition()
   }
 
   getContainerSize() {
     return this._layoutHandler.getElementSize()
-  }
-
-  getLastScrollPosition() {
-    return this._scrollHandler.scroll
   }
 
   // Устанавливает размер полосы прокрутки
@@ -86,6 +107,10 @@ export default class Scenario {
 
   setLayoutShift(layoutShift) {
     this._layoutHandler.setLayoutShift(layoutShift)
+  }
+
+  get layoutShift() {
+    return this._layoutHandler.layoutShift
   }
 
   // Устанавливает отступ для контейнера элементов
@@ -119,7 +144,12 @@ export default class Scenario {
       this.subscribers.collection.resolve = resolve
     })
     return new Promise((resolve) => {
-      this.subscribers.collection.promise.then(resolve)
+      this.subscribers.collection.promise.then((eventName) => {
+        if (eventName === 'scroll') {
+          return
+        }
+        resolve()
+      })
       this._layoutHandler
         .initMutationObserver(this.computeLayoutSizeContext())
         .then(resolve)
@@ -164,8 +194,8 @@ export default class Scenario {
       return
     }
     const resolve = this.subscribers.collection.resolve
-    // this.subscribers.collection = null
-    resolve()
+    this.subscribers.collection = null
+    resolve(event)
   }
 
   constructor({

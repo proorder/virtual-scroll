@@ -22,6 +22,10 @@ export default class ScrollHandler {
     this._lastScroll = value
   }
 
+  getScrollPosition() {
+    return this.scrollElement.scrollTop
+  }
+
   constructor({ layoutHandler, scrollElement }) {
     this._scrollElement = getScrollElement(scrollElement)
     this._layoutHandler = layoutHandler

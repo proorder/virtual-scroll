@@ -121,8 +121,11 @@ export default {
     },
     onTopScroll() {
       const previousHeight = this.$refs.tr.offsetHeight
+      // Сохранить позицию скролла
       const scrollPosition = this.$refs.page.scrollTop
+      // Сохранить старт индекс
       const previousStartIndex = this.startIndex
+      // Сместить коллекцию
       this.startIndex = Math.max(
         0,
         this.startIndex - Math.floor(this.oneScreenCount / 2)
