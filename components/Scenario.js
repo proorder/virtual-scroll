@@ -18,6 +18,8 @@ export default class Scenario {
 
   priority = Scenario.PRIORITIES.INDIFFERENCE
 
+  processBusy = false
+
   // Properties
   // Стартовый индекс с которого начинается отображение элементов
   index = 0
@@ -145,6 +147,7 @@ export default class Scenario {
     })
     return new Promise((resolve) => {
       this.subscribers.collection.promise.then((eventName) => {
+        this.subscribers.collection = null
         if (eventName === 'scroll') {
           return
         }
@@ -152,7 +155,10 @@ export default class Scenario {
       })
       this._layoutHandler
         .initMutationObserver(this.computeLayoutSizeContext())
-        .then(resolve)
+        .then((result) => {
+          this.subscribers.collection = null
+          resolve(result)
+        })
     })
   }
 
@@ -190,6 +196,9 @@ export default class Scenario {
 
   processEvent(event, payload) {
     if (!this.subscribers.collection) {
+      if (this.processBusy) {
+        return
+      }
       this.process(payload)
       return
     }

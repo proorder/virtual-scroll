@@ -5,6 +5,7 @@ export default class CollectionHandler {
 
   lastDisplayedIndex = 0
   _collection = []
+  _displayCollection = []
 
   setContext({ total, index }) {
     this.total = total
@@ -25,6 +26,7 @@ export default class CollectionHandler {
     const displayCollection = this._collection
       .slice(startIndex, startIndex + amount)
       .filter((item) => !!item)
+    this._displayCollection = displayCollection
 
     return {
       displayCollection,

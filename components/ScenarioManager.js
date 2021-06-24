@@ -1,5 +1,6 @@
 import InitializeScenario from './scenaries/InitializeScenario'
 import BackScrollScenario from './scenaries/BackScrollScenario'
+import FrontScrollScenario from './scenaries/FrontScrollScenario'
 
 export default class ScenarioManager {
   scenaries = []
@@ -9,6 +10,7 @@ export default class ScenarioManager {
   constructor(contextObject) {
     this.scenaries.push(new InitializeScenario(contextObject))
     this.scenaries.push(new BackScrollScenario(contextObject))
+    this.scenaries.push(new FrontScrollScenario(contextObject))
   }
 
   createEvent(event, payload) {
