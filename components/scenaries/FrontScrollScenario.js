@@ -11,6 +11,13 @@ export default class FrontScrollScenario extends Scenario {
   }
 
   async process() {
+    if (
+      this.lastDisplayedIndex + this.lastCollectionLength ===
+      this.collectionLength
+    ) {
+      this.finishProcess()
+      return
+    }
     this.processBusy = true
 
     const diff = this.getLastScrollPosition() - this.getScrollPosition()
