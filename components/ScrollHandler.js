@@ -18,7 +18,7 @@ export default class ScrollHandler {
     this.scrollElement.scrollTop = value
   }
 
-  setLastScroll(value) {
+  setLastScrollPosition(value) {
     this._lastScroll = value
   }
 

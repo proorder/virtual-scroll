@@ -16,35 +16,54 @@ export default class FrontScrollScenario extends Scenario {
     const diff = this.getLastScrollPosition() - this.getScrollPosition()
     this.setLastScrollPosition()
 
-    console.log('Init')
+    console.log('Front Scroll Init')
 
     const approximatelyEls =
       Math.ceil(Math.ceil(Math.abs(diff) / this.oneElementSize) / this.grid) *
       this.grid
 
-    const nextLength = this.lastCollectionLength + approximatelyEls
+    const nextLength = Math.min(
+      this.lastCollectionLength + approximatelyEls,
+      this.collectionLength - this.lastDisplayedIndex // Убавлять ли -1?
+    )
     await this.displayCollection(this.lastDisplayedIndex, nextLength)
     const containerSize = this.getContainerSize()
-    console.log(
-      this.lastDisplayedIndex,
-      this.lastCollectionLength,
-      approximatelyEls,
-      nextLength
-    )
     await this.displayCollection(
       this.lastDisplayedIndex + approximatelyEls,
       nextLength - approximatelyEls
     )
-    console.log(
-      this.lastDisplayedIndex,
-      this.lastCollectionLength,
-      approximatelyEls,
-      nextLength
-    )
     const layoutShift = containerSize - this.getContainerSize()
     this.setLayoutShift(this.layoutShift + Math.abs(layoutShift))
 
+    await this.correctCollectionShift(layoutShift, approximatelyEls, diff)
+
     this.processBusy = false
     this.finishProcess()
+  }
+
+  // Метод создает дополнительную корректировку коллекции, для более точного
+  // определения количества элементов, которые необходимо добавить
+  async correctCollectionShift(layoutShift, approximatelyEls, diff) {
+    const previousAdded = approximatelyEls / this.grid
+    const oneElementSize = layoutShift / previousAdded
+    let correction =
+      (Math.ceil(Math.abs(diff) / oneElementSize) - previousAdded) * this.grid
+    if (!correction) {
+      return
+    }
+    const nextLength = Math.min(
+      this.lastCollectionLength + correction,
+      this.collectionLength - this.lastDisplayedIndex
+    ) // *
+    correction = nextLength - this.lastCollectionLength
+    await this.displayCollection(this.lastDisplayedIndex, nextLength)
+    const containerSize = this.getContainerSize()
+    await this.displayCollection(
+      this.lastDisplayedIndex + correction,
+      nextLength - correction
+    )
+    this.setLayoutShift(
+      this.layoutShift + Math.abs(containerSize - this.getContainerSize())
+    )
   }
 }

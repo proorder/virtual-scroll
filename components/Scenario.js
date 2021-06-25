@@ -27,8 +27,12 @@ export default class Scenario {
   minDisplayedEls = null
   // Число колонок
   grid = null
+
   // Общее число элементов в коллекции
-  collectionLength = null
+  get collectionLength() {
+    return this._collectionHandler.total
+  }
+
   // Массив промисов, по результатам выполнения которых возобновляется process
   subscribers = {
     collection: null,
@@ -83,8 +87,9 @@ export default class Scenario {
   }
 
   setLastScrollPosition(value = false) {
-    this._scrollHandler.setLastScrollPosition =
+    this._scrollHandler.setLastScrollPosition(
       typeof value === 'boolean' ? this.getScrollPosition() : value
+    )
   }
 
   getLastScrollPosition() {
