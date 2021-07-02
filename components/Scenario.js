@@ -126,11 +126,19 @@ export default class Scenario {
     if (fromPoint && this._scrollHandler.scroll) {
       offset = this._scrollHandler.scroll
     } else {
+      // TODO: Убедиться, что не нужно index делить на grid
       offset =
         this._layoutHandler.oneElementSize * this._collectionHandler.index
     }
     this._scrollHandler.scroll = offset
     this.setLayoutShift(offset + fromPoint)
+  }
+
+  getIndexByOffset() {
+    const els =
+      this._scrollHandler.getScrollPosition() /
+      this._layoutHandler.oneElementSize
+    return Math.ceil(els / this.grid) * this.grid
   }
 
   // Получает коллекцию из CollectionHandler.

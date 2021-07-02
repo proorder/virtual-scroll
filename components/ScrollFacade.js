@@ -58,7 +58,7 @@ export default class ScrollFacade {
   }
 
   initScroll() {
-    this.bindingHandleScroll = debounce(this.handleScroll.bind(this), 250)
+    this.bindingHandleScroll = debounce(this.handleScroll.bind(this), 30)
     const scrollElement =
       this._scrollHandler.scrollElement instanceof HTMLHtmlElement
         ? document

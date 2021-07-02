@@ -1,5 +1,5 @@
 <template lang="pug">
-  .item-card(:style="{ padding: `${item.random}px` }")
+  .item-card(:style="{ padding: `${true ? 10 : item.random}px`, height: '110px' }")
     .item-card__title
       | {{ currentItem.title }}
     .item-card__content

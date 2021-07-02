@@ -4,9 +4,9 @@ export default class BackScrollScenario extends Scenario {
   priority = Scenario.PRIORITIES.HIGH
 
   stateMachine(event) {
+    const scrollDelta = this.getLastScrollPosition() - this.getScrollPosition()
     return (
-      event === Scenario.EVENTS.SCROLL &&
-      this.getLastScrollPosition() - this.getScrollPosition() > 50
+      event === Scenario.EVENTS.SCROLL && scrollDelta > 50 && scrollDelta < 500
     )
   }
 
