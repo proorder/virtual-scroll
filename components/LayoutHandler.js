@@ -11,6 +11,8 @@ export default class LayoutHandler {
 
   _layoutShift = null
 
+  _lastComputedLayoutSize = null
+
   set layoutShift(value) {
     this._layoutShift = value
   }
@@ -31,9 +33,7 @@ export default class LayoutHandler {
   computeLayoutSize({ total, displayCollectionLength }) {
     this.firstCallOccurred = true
     return (
-      Math.ceil(total / displayCollectionLength) *
-      1.5 * // Approximately how many times will the content stretch after filling with data
-      this.getElementSize()
+      Math.ceil(total / displayCollectionLength) * this.getElementSize() // Can be multiply on Approximately how many times will the content stretch after filling with data
     )
   }
 
@@ -107,11 +107,13 @@ export default class LayoutHandler {
       })
       this.mutationObserver.observe(this._layoutElement, {
         childList: true,
+        characterData: true,
+        subtree: true,
       })
     })
   }
 
   handleMutationObserver(layoutSize) {
-    this.layoutSize = layoutSize
+    this._lastComputedLayoutSize = layoutSize
   }
 }

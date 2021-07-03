@@ -1,6 +1,6 @@
 import Scenario from '../Scenario'
 
-export default class InitializeScenario extends Scenario {
+export default class JumpScenario extends Scenario {
   priority = Scenario.PRIORITIES.HIGH
 
   stateMachine() {
@@ -8,19 +8,13 @@ export default class InitializeScenario extends Scenario {
     return this._layoutHandler.firstCallOccurred && Math.abs(scrollDelta) > 500
   }
 
-  process() {
-    console.log(
-      'Jump Init',
-      this.getLastScrollPosition() - this.getScrollPosition()
-    )
+  async process() {
+    console.log('Jump Init')
     this.setLastScrollPosition()
 
     const index = this.getIndexByOffset()
-    console.log(this.oneScreenElsCount, this.oneElementSize)
-    setTimeout(async () => {
-      await this.displayCollection(index, this.oneScreenElsCount)
-      this.setLayoutShift(this.getLastScrollPosition())
-    }, 3000)
+    await this.displayCollection(index, this.oneScreenElsCount)
+    this.setLayoutShift(this.getLastScrollPosition())
 
     this.finishProcess()
   }

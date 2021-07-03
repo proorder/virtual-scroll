@@ -20,6 +20,10 @@ export default class Scenario {
 
   processBusy = false
 
+  get total() {
+    return this._collectionHandler.total
+  }
+
   // Properties
   // Стартовый индекс с которого начинается отображение элементов
   index = 0
@@ -100,16 +104,25 @@ export default class Scenario {
     return this._scrollHandler.getScrollPosition()
   }
 
+  setScrollPosition(value) {
+    this._scrollHandler.scroll = value
+  }
+
   getContainerSize() {
     return this._layoutHandler.getElementSize()
   }
 
   // Устанавливает размер полосы прокрутки
   setLayoutSize(layoutSize) {
+    this._layoutHandler.layoutSize = layoutSize
     this._layoutHandler.setLayoutSize(layoutSize)
     return new Promise((resolve) => {
       this.nextTick().then(resolve)
     })
+  }
+
+  get layoutSize() {
+    return this._layoutHandler.layoutSize
   }
 
   setLayoutShift(layoutShift) {
@@ -126,9 +139,9 @@ export default class Scenario {
     if (fromPoint && this._scrollHandler.scroll) {
       offset = this._scrollHandler.scroll
     } else {
-      // TODO: Убедиться, что не нужно index делить на grid
       offset =
-        this._layoutHandler.oneElementSize * this._collectionHandler.index
+        (this._layoutHandler.oneElementSize * this._collectionHandler.index) /
+        this.grid
     }
     this._scrollHandler.scroll = offset
     this.setLayoutShift(offset + fromPoint)
@@ -138,7 +151,7 @@ export default class Scenario {
     const els =
       this._scrollHandler.getScrollPosition() /
       this._layoutHandler.oneElementSize
-    return Math.ceil(els / this.grid) * this.grid
+    return Math.floor(els) * this.grid
   }
 
   // Получает коллекцию из CollectionHandler.
@@ -146,10 +159,11 @@ export default class Scenario {
   // Дожидается рендера элементов и вызывает resolve.
   setDisplayCollection(index, amount) {
     const {
+      // eslint-disable-next-line no-unused-vars
       displayCollection,
+      // eslint-disable-next-line no-unused-vars
       viewingIndexes,
     } = this._collectionHandler.getDisplayCollection(index, amount)
-    this._setDisplayCollection({ displayCollection, viewingIndexes })
     this.subscribers.collection = {
       promise: null,
       resolve: null,
@@ -172,6 +186,10 @@ export default class Scenario {
           this.subscribers.collection = null
           resolve(result)
         })
+      // setTimeout(() => {
+      //   console.log('Запрос из коллекции', index)
+      // }, 2000)
+      this._setDisplayCollection({ displayCollection, viewingIndexes })
     })
   }
 

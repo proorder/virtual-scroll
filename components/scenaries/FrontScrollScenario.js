@@ -12,6 +12,8 @@ export default class FrontScrollScenario extends Scenario {
     )
   }
 
+  previousNotRoundedEls = null
+
   async process() {
     if (
       this.lastDisplayedIndex + this.lastCollectionLength ===
@@ -27,9 +29,18 @@ export default class FrontScrollScenario extends Scenario {
 
     console.log('Front Scroll Init')
 
-    const approximatelyEls =
-      Math.ceil(Math.ceil(Math.abs(diff) / this.oneElementSize) / this.grid) *
-      this.grid
+    // Задача:
+    // Продолжать рендер approximatelyEls, только когда их величина достигла grid x2
+    const notRoundedEls =
+      Math.abs(diff) / this.oneElementSize + (this.previousNotRoundedEls || 0)
+    if (notRoundedEls < 2) {
+      this.previousNotRoundedEls = notRoundedEls
+      this.processBusy = false
+      this.finishProcess()
+      return
+    }
+    this.previousNotRoundedEls = notRoundedEls % Math.floor(notRoundedEls)
+    const approximatelyEls = Math.floor(notRoundedEls) * this.grid
 
     const nextLength = Math.min(
       this.lastCollectionLength + approximatelyEls,
@@ -44,7 +55,15 @@ export default class FrontScrollScenario extends Scenario {
     const layoutShift = containerSize - this.getContainerSize()
     this.setLayoutShift(this.layoutShift + Math.abs(layoutShift))
 
-    await this.correctCollectionShift(layoutShift, approximatelyEls, diff)
+    if (this.lastDisplayedIndex + this.lastCollectionLength === this.total) {
+      const shiftDiff =
+        this.layoutSize - (this.layoutShift + this.getContainerSize())
+      this.setScrollPosition(this.getLastScrollPosition() + shiftDiff)
+      this.setLayoutShift(this.layoutSize - this.getContainerSize())
+    }
+
+    // Необходимо включить интервалами, а не на каждый рендер:
+    // await this.correctCollectionShift(layoutShift, approximatelyEls, diff)
 
     this.processBusy = false
     this.finishProcess()

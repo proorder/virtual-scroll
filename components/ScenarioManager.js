@@ -1,9 +1,12 @@
 import InitializeScenario from './scenaries/InitializeScenario'
 import BackScrollScenario from './scenaries/BackScrollScenario'
 import FrontScrollScenario from './scenaries/FrontScrollScenario'
+// eslint-disable-next-line no-unused-vars
 import JumpScenario from './scenaries/JumpScenario'
 
 export default class ScenarioManager {
+  eventsQueue = []
+
   scenaries = []
 
   inProgressScenarios = {}
@@ -16,6 +19,16 @@ export default class ScenarioManager {
   }
 
   createEvent(event, payload) {
+    this.eventsQueue.push({
+      event,
+      payload,
+    })
+    if (this.eventsQueue.length === 1) {
+      this.executeEvent(this.eventsQueue.shift())
+    }
+  }
+
+  executeEvent({ event, payload }) {
     if (!Object.keys(this.inProgressScenarios).length) {
       this.executeScenarioSelection(event)
     }
@@ -37,5 +50,8 @@ export default class ScenarioManager {
 
   finishProcess(classInstance) {
     delete this.inProgressScenarios[classInstance.constructor.name]
+    if (this.eventsQueue.length) {
+      this.executeEvent(this.eventsQueue.shift())
+    }
   }
 }

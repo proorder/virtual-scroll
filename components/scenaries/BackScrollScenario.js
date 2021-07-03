@@ -10,6 +10,8 @@ export default class BackScrollScenario extends Scenario {
     )
   }
 
+  previousNotRoundedEls = null
+
   async process() {
     if (this.lastDisplayedIndex === 0) {
       this.finishProcess()
@@ -20,9 +22,18 @@ export default class BackScrollScenario extends Scenario {
 
     const diff = this.getLastScrollPosition() - this.getScrollPosition()
     this.setLastScrollPosition()
-    let approximatelyEls =
-      Math.ceil(Math.ceil(Math.abs(diff) / this.oneElementSize) / this.grid) *
-      this.grid
+
+    const notRoundedEls =
+      Math.abs(diff) / this.oneElementSize + (this.previousNotRoundedEls || 0)
+    if (notRoundedEls < 2) {
+      this.previousNotRoundedEls = notRoundedEls
+      this.processBusy = false
+      this.finishProcess()
+      return
+    }
+
+    this.previousNotRoundedEls = notRoundedEls % Math.floor(notRoundedEls)
+    let approximatelyEls = Math.floor(notRoundedEls) * this.grid
 
     const containerSize = this.getContainerSize()
     const nextStartIndex = Math.max(
@@ -31,13 +42,19 @@ export default class BackScrollScenario extends Scenario {
     )
     approximatelyEls = this.lastDisplayedIndex - nextStartIndex
 
-    const layoutShift = await this.displayFromNextStartIndex(
+    /* const layoutShift = */ await this.displayFromNextStartIndex(
       nextStartIndex,
       containerSize,
       approximatelyEls
     )
 
-    await this.correctCollectionShift(layoutShift, approximatelyEls, diff)
+    if (this.lastDisplayedIndex === 0 && this.layoutShift !== 0) {
+      this.setScrollPosition(this.getLastScrollPosition() - this.layoutShift)
+      this.setLayoutShift(0)
+    }
+
+    // Необходимо включить интервалами, а не на каждый рендер:
+    // await this.correctCollectionShift(layoutShift, approximatelyEls, diff)
 
     this.processBusy = false
     this.finishProcess()

@@ -32,7 +32,7 @@ export default class InitializeScenario extends Scenario {
     const previousContainerSize = this.getContainerSize()
     // Команда: Сместить начальный индекс,
     // увеличить отображаемое количество элементов
-    await this.displayCollection(
+    const { layoutSize: lastLayoutSize } = await this.displayCollection(
       Math.max(index - halfScreenEls, 0),
       oneScreenElsCount + halfScreenEls * 2
     )
@@ -42,6 +42,8 @@ export default class InitializeScenario extends Scenario {
         previousContainerSize -
         this.getContainerSize()
     )
+
+    await this.setLayoutSize(lastLayoutSize)
 
     // Команда: Завершить процесс. Удалить из стэка выполняемых
     this.finishProcess()
