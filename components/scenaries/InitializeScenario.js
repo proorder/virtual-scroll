@@ -49,12 +49,6 @@ export default class InitializeScenario extends Scenario {
     this.finishProcess()
   }
 
-  getHalfScreenEls(index, oneScreenElsCount) {
-    const half = Math.ceil(oneScreenElsCount / 2)
-    const delta = index - half - ((index - half) % this.grid)
-    return index - delta
-  }
-
   // Смещает начальный индекс отображаемой коллекции к началу
   // на количество элементов равное половине экрана
   setDisplayCollectionPrefix() {}

@@ -1,9 +1,9 @@
 <template lang="pug">
   .item-card(:style="{ padding: `${identify ? 10 : item.random}px`, height: identify ? '110px' : 'auto' }")
     .item-card__title
-      | {{ currentItem.title }}
+      | {{ currentItem.label }}
     .item-card__content
-      | {{ currentItem.title }}
+      | {{ currentItem.label }}
 </template>
 
 <script>
@@ -20,6 +20,7 @@ export default {
       identify: true,
       currentItem: {
         title: '',
+        label: '',
       },
     }
   },

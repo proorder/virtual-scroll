@@ -154,16 +154,21 @@ export default class Scenario {
     return Math.floor(els) * this.grid
   }
 
+  getHalfScreenEls(index, oneScreenElsCount) {
+    const half = Math.ceil(oneScreenElsCount / 2)
+    const delta = index - half - ((index - half) % this.grid)
+    return index - delta
+  }
+
   // Получает коллекцию из CollectionHandler.
   // Вызывает _setDisplayCollection, тем самым выводит коллекцию на дисплей.
   // Дожидается рендера элементов и вызывает resolve.
   setDisplayCollection(index, amount) {
     const {
-      // eslint-disable-next-line no-unused-vars
       displayCollection,
-      // eslint-disable-next-line no-unused-vars
       viewingIndexes,
     } = this._collectionHandler.getDisplayCollection(index, amount)
+    console.log('displayCollection', displayCollection)
     this.subscribers.collection = {
       promise: null,
       resolve: null,
@@ -186,9 +191,6 @@ export default class Scenario {
           this.subscribers.collection = null
           resolve(result)
         })
-      // setTimeout(() => {
-      //   console.log('Запрос из коллекции', index)
-      // }, 2000)
       this._setDisplayCollection({ displayCollection, viewingIndexes })
     })
   }

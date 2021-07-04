@@ -12,6 +12,8 @@ export default class FrontScrollScenario extends Scenario {
     )
   }
 
+  first = false
+
   previousNotRoundedEls = null
 
   async process() {
@@ -56,10 +58,13 @@ export default class FrontScrollScenario extends Scenario {
     this.setLayoutShift(this.layoutShift + Math.abs(layoutShift))
 
     if (this.lastDisplayedIndex + this.lastCollectionLength === this.total) {
-      const shiftDiff =
-        this.layoutSize - (this.layoutShift + this.getContainerSize())
-      this.setScrollPosition(this.getLastScrollPosition() + shiftDiff)
-      this.setLayoutShift(this.layoutSize - this.getContainerSize())
+      if (!this.first) {
+        const shiftDiff =
+          this.layoutSize - (this.layoutShift + this.getContainerSize())
+        this.setScrollPosition(this.getLastScrollPosition() + shiftDiff)
+        this.setLayoutShift(this.layoutSize - this.getContainerSize())
+      }
+      this.first = true
     }
 
     // Необходимо включить интервалами, а не на каждый рендер:
