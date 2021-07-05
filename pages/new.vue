@@ -59,7 +59,9 @@ export default {
     },
   },
   created() {
-    this.fetch(1)
+    this.fetch(1).then(({ total }) => {
+      this.total = total
+    })
   },
   methods: {
     fetch(page) {
@@ -67,9 +69,8 @@ export default {
         const url = `http://localhost:3332/resources/?limit=14&page=${page}&query=&filter=%2Fgroups%2Fid+eq+%228aeba98c-f944-401b-b25d-45e9ebaf5015%22&sortBy=updatedAt&sortDir=asc&display=model&values=`
         fetch(url)
           .then((r) => r.json())
-          .then(({ data, total }) => {
-            this.total = total
-            resolve(data)
+          .then((response) => {
+            resolve(response)
           })
       })
     },
@@ -84,23 +85,32 @@ export default {
       const rightPage = Math.ceil(endIndex / 14)
       const pages = []
       for (let i = leftPage; i <= rightPage; i++) {
+        if (this.loadedPagesHistory.includes(i)) {
+          continue
+        }
         pages.push(i)
       }
-      console.log(pages, leftPage, rightPage)
-      const promises = pages
-        .filter((p) => !this.loadedPagesHistory.includes(p))
-        .map((page) => {
-          return this.fetch(page)
-        })
-      this.loadedPagesHistory = [...this.loadedPagesHistory, ...pages].sort(
-        (a, b) => a - b
-      )
-      Promise.all(promises).then((arr) => {
-        arr.forEach((pageItems, index) => {
-          this.pushItemsToCollection(pageItems, pages[index])
-        })
+      console.log(pages)
+      const promises = pages.map((page) => {
+        return this.fetch(page)
       })
-      // this.$set(this, 'items', this.items)
+      this.loadedPagesHistory = [...this.loadedPagesHistory, ...pages].sort()
+      Promise.all(promises).then((results) => {
+        let total = null
+        const collection = []
+        results.forEach(({ data, page, total: lastTotal, perPage }) => {
+          total = lastTotal
+          data.forEach((item, index) => {
+            item.index = perPage * (page - 1) + index
+            collection.push(item)
+          })
+        })
+        this.items = [...this.items, ...collection].sort(
+          (a, b) => a.index - b.index
+        )
+        console.log(this.items)
+        this.total = total
+      })
     },
     pushItemsToCollection(items, page) {
       items.forEach((item, index) => {

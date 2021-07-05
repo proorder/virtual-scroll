@@ -168,7 +168,6 @@ export default class Scenario {
       displayCollection,
       viewingIndexes,
     } = this._collectionHandler.getDisplayCollection(index, amount)
-    console.log('displayCollection', displayCollection)
     this.subscribers.collection = {
       promise: null,
       resolve: null,

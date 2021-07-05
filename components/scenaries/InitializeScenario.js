@@ -15,11 +15,14 @@ export default class InitializeScenario extends Scenario {
       index,
       minDisplayCollection
     )
+
     // Команда: Установить размер лэйаута
     // Комментарий: Во избежании layout shift браузера
     // при заполнении коллекции элементами, создается запас размера
     await this.setLayoutSize(layoutSize)
+
     const oneElementSize = this.computeOneElementSize()
+
     // Команда: Вычислить приблизительное количество элементов на одном экране
     const oneScreenElsCount = this.computeOneScreenElementsCount(oneElementSize)
     // Данное количество, отнимаемое от index будет являться
@@ -28,6 +31,8 @@ export default class InitializeScenario extends Scenario {
     const halfScreenEls = this.getHalfScreenEls(index, oneScreenElsCount)
     // Команда: Вывести полтора экрана элементов
     await this.displayCollection(index, oneScreenElsCount + halfScreenEls)
+    alert()
+    /*
     this.setOffset()
     const previousContainerSize = this.getContainerSize()
     // Команда: Сместить начальный индекс,
@@ -47,6 +52,8 @@ export default class InitializeScenario extends Scenario {
 
     // Команда: Завершить процесс. Удалить из стэка выполняемых
     this.finishProcess()
+
+   */
   }
 
   // Смещает начальный индекс отображаемой коллекции к началу

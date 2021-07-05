@@ -26,7 +26,6 @@ export default class CollectionHandler {
     const displayCollection = this._collection.filter(
       (item) => item.index >= startIndex && item.index <= startIndex + amount
     )
-    console.log(displayCollection)
     this._displayCollection = displayCollection
 
     return {
