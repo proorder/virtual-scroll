@@ -65,6 +65,14 @@ export default class Scenario {
     return this._collectionHandler.lastRequiredCollectionLength
   }
 
+  get necessaryCollectionLength() {
+    return this._layoutHandler.necessaryCollectionLength
+  }
+
+  set necessaryCollectionLength(value) {
+    this._layoutHandler.necessaryCollectionLength = value
+  }
+
   // Methods
   // Вычисляет приблизительный размер одного элемента
   computeOneElementSize() {
@@ -195,6 +203,9 @@ export default class Scenario {
   }
 
   async displayCollection(index, length) {
+    // TODO: Console
+    console.log('Инициализация запроса', length)
+    this._layoutHandler.lastRequiredCollectionLength = length
     let result
     while (!result) {
       result = await this.setDisplayCollection(index, length)

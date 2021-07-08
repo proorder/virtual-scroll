@@ -12,8 +12,6 @@ export default class FrontScrollScenario extends Scenario {
     )
   }
 
-  first = false
-
   previousNotRoundedEls = null
 
   async process() {
@@ -49,22 +47,28 @@ export default class FrontScrollScenario extends Scenario {
       this.collectionLength - this.lastDisplayedIndex // Убавлять ли -1?
     )
     await this.displayCollection(this.lastDisplayedIndex, nextLength)
-    const containerSize = this.getContainerSize()
-    await this.displayCollection(
-      this.lastDisplayedIndex + approximatelyEls,
-      nextLength - approximatelyEls
+
+    console.log(
+      this.lastCollectionLength > this.necessaryCollectionLength
+        ? 'Добавлять'
+        : 'Не добавлять'
     )
-    const layoutShift = containerSize - this.getContainerSize()
-    this.setLayoutShift(this.layoutShift + Math.abs(layoutShift))
+    if (this.lastCollectionLength > this.necessaryCollectionLength) {
+      const containerSize = this.getContainerSize()
+      await this.displayCollection(
+        this.lastDisplayedIndex + approximatelyEls,
+        nextLength - approximatelyEls
+      )
+
+      const layoutShift = containerSize - this.getContainerSize()
+      this.setLayoutShift(this.layoutShift + Math.abs(layoutShift))
+    }
 
     if (this.lastDisplayedIndex + this.lastCollectionLength === this.total) {
-      if (!this.first) {
-        const shiftDiff =
-          this.layoutSize - (this.layoutShift + this.getContainerSize())
-        this.setScrollPosition(this.getLastScrollPosition() + shiftDiff)
-        this.setLayoutShift(this.layoutSize - this.getContainerSize())
-      }
-      this.first = true
+      const shiftDiff =
+        this.layoutSize - (this.layoutShift + this.getContainerSize())
+      this.setScrollPosition(this.getLastScrollPosition() + shiftDiff)
+      this.setLayoutShift(this.layoutSize - this.getContainerSize())
     }
 
     // Необходимо включить интервалами, а не на каждый рендер:

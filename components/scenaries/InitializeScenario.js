@@ -29,31 +29,37 @@ export default class InitializeScenario extends Scenario {
     // фактическим начальным индексом. Соотвественно должно отталкиваться от
     // grid
     const halfScreenEls = this.getHalfScreenEls(index, oneScreenElsCount)
+    this.necessaryCollectionLength = oneScreenElsCount + halfScreenEls * 2
     // Команда: Вывести полтора экрана элементов
-    await this.displayCollection(index, oneScreenElsCount + halfScreenEls)
-    alert()
-    /*
+    const { layoutSize: intermediateLayoutSize } = await this.displayCollection(
+      index,
+      oneScreenElsCount + halfScreenEls
+    )
     this.setOffset()
-    const previousContainerSize = this.getContainerSize()
-    // Команда: Сместить начальный индекс,
-    // увеличить отображаемое количество элементов
-    const { layoutSize: lastLayoutSize } = await this.displayCollection(
-      Math.max(index - halfScreenEls, 0),
-      oneScreenElsCount + halfScreenEls * 2
-    )
-    // Команда: Сместить отступ контейнера
-    this.setLayoutShift(
-      this.getLastScrollPosition() +
-        previousContainerSize -
-        this.getContainerSize()
-    )
 
-    await this.setLayoutSize(lastLayoutSize)
+    if (this.lastDisplayedIndex > 0) {
+      const previousContainerSize = this.getContainerSize()
+      // Команда: Сместить начальный индекс,
+      // увеличить отображаемое количество элементов
+      const { layoutSize: lastLayoutSize } = await this.displayCollection(
+        Math.max(index - halfScreenEls, 0),
+        oneScreenElsCount + halfScreenEls * 2
+      )
+
+      // Команда: Сместить отступ контейнера
+      this.setLayoutShift(
+        this.getLastScrollPosition() +
+          previousContainerSize -
+          this.getContainerSize()
+      )
+
+      await this.setLayoutSize(lastLayoutSize)
+    } else {
+      await this.setLayoutSize(intermediateLayoutSize)
+    }
 
     // Команда: Завершить процесс. Удалить из стэка выполняемых
     this.finishProcess()
-
-   */
   }
 
   // Смещает начальный индекс отображаемой коллекции к началу

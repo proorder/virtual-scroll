@@ -24,7 +24,7 @@ export default class CollectionHandler {
     this.lastDisplayedIndex = startIndex
     this.lastRequiredCollectionLength = amount
     const displayCollection = this._collection.filter(
-      (item) => item.index >= startIndex && item.index <= startIndex + amount
+      (item) => item.index >= startIndex && item.index < startIndex + amount
     )
     this._displayCollection = displayCollection
 

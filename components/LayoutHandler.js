@@ -9,6 +9,21 @@ export default class LayoutHandler {
   layoutSize = null
   oneElementSize = null
 
+  _lastMutationRecordsLength = 0
+  _previousRequiredCollectionLength = 0
+  _lastRequiredCollectionLength = 0
+
+  necessaryCollectionLength = null
+
+  get lastRequiredCollectionLength() {
+    return this._lastRequiredCollectionLength
+  }
+
+  set lastRequiredCollectionLength(value) {
+    this._previousRequiredCollectionLength = this._lastRequiredCollectionLength
+    this._lastRequiredCollectionLength = value
+  }
+
   _layoutShift = null
 
   _lastComputedLayoutSize = null
@@ -87,8 +102,25 @@ export default class LayoutHandler {
       if (this.mutationObserver) {
         this.mutationObserver.disconnect()
       }
-      this.mutationObserver = new MutationObserver(() => {
-        if (!this._layoutElement.offsetHeight) {
+      this.mutationObserver = new MutationObserver((mutationRecords) => {
+        mutationRecords = mutationRecords.filter(
+          (m) => m.type === 'childList' && m.addedNodes.length
+        )
+        if (
+          !this._layoutElement.offsetHeight &&
+          this.lastRequiredCollectionLength > 0
+        ) {
+          return
+        }
+        this._lastMutationRecordsLength =
+          this._lastMutationRecordsLength + mutationRecords.length
+
+        if (
+          this._lastMutationRecordsLength <
+            this.lastRequiredCollectionLength -
+              this._previousRequiredCollectionLength &&
+          this.lastRequiredCollectionLength > 0
+        ) {
           return
         }
         const layoutSize = this.computeLayoutSize({
@@ -96,7 +128,8 @@ export default class LayoutHandler {
           displayCollectionLength,
         })
         this.handleMutationObserver(layoutSize)
-        if (layoutSize) {
+        if (layoutSize || this.lastRequiredCollectionLength === 0) {
+          this._lastMutationRecordsLength = 0
           this.mutationObserver.disconnect()
           resolve({
             layoutSize,
@@ -109,6 +142,7 @@ export default class LayoutHandler {
         childList: true,
         characterData: true,
         subtree: true,
+        characterDataOldValue: true,
       })
     })
   }

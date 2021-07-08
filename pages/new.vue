@@ -1,7 +1,6 @@
 <template lang="pug">
   .container
     virtual-scroll(
-      v-if="total",
       :total="total",
       :collection="items",
       :classes="['page-items-list']",
@@ -37,7 +36,7 @@ export default {
   name: 'MainPage',
   data() {
     return {
-      loadedPagesHistory: [1],
+      loadedPagesHistory: [],
       page: 1,
       total: null,
       limit: 14,
@@ -59,9 +58,9 @@ export default {
     },
   },
   created() {
-    this.fetch(1).then(({ total }) => {
-      this.total = total
-    })
+    // this.fetch(1).then(({ total }) => {
+    //   this.total = total
+    // })
   },
   methods: {
     fetch(page) {
@@ -81,8 +80,9 @@ export default {
       ) {
         return
       }
-      const leftPage = Math.ceil(startIndex / 14)
-      const rightPage = Math.ceil(endIndex / 14)
+      // index начинается с 0, а количество отображаемых элементов с 1
+      const leftPage = Math.ceil((startIndex + 1) / 14)
+      const rightPage = Math.ceil((endIndex + 1) / 14)
       const pages = []
       for (let i = leftPage; i <= rightPage; i++) {
         if (this.loadedPagesHistory.includes(i)) {
@@ -90,7 +90,6 @@ export default {
         }
         pages.push(i)
       }
-      console.log(pages)
       const promises = pages.map((page) => {
         return this.fetch(page)
       })
@@ -108,7 +107,6 @@ export default {
         this.items = [...this.items, ...collection].sort(
           (a, b) => a.index - b.index
         )
-        console.log(this.items)
         this.total = total
       })
     },
@@ -124,7 +122,7 @@ export default {
 
 <style lang="stylus">
 body
-  background-color #e7e7e7
+  background-color #e7e7e7 // #414141
 // #35495e
 .container
   margin 0 auto

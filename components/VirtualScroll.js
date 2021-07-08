@@ -14,7 +14,7 @@ export default {
     },
     index: {
       type: Number,
-      default: 450,
+      default: 0,
     },
     min: {
       type: Number,
