@@ -57,11 +57,6 @@ export default {
       this.loadedPagesHistory = [...this.loadedPagesHistory, value].sort()
     },
   },
-  created() {
-    // this.fetch(1).then(({ total }) => {
-    //   this.total = total
-    // })
-  },
   methods: {
     fetch(page) {
       return new Promise((resolve) => {
@@ -83,6 +78,8 @@ export default {
       // index начинается с 0, а количество отображаемых элементов с 1
       const leftPage = Math.ceil((startIndex + 1) / 14)
       const rightPage = Math.ceil((endIndex + 1) / 14)
+      // TODO: Console
+      console.log(startIndex, endIndex, leftPage, rightPage)
       const pages = []
       for (let i = leftPage; i <= rightPage; i++) {
         if (this.loadedPagesHistory.includes(i)) {
@@ -101,6 +98,7 @@ export default {
           total = lastTotal
           data.forEach((item, index) => {
             item.index = perPage * (page - 1) + index
+            item.random = Math.random() * 20
             collection.push(item)
           })
         })

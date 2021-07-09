@@ -23,20 +23,33 @@ export default class JumpScenario extends Scenario {
     // }
 
     await this.displayCollection(index, this.oneScreenElsCount + halfScreenEls)
-    // this.setLayoutShift(this.getLastScrollPosition())
+
+    if (index === 0) {
+      this.setLayoutShift(0)
+      this.finishProcess()
+      return
+    }
 
     const previousContainerSize = this.getContainerSize()
 
+    const backOffset = Math.max(index - halfScreenEls, 0)
+    const delta = backOffset - Math.abs(index - halfScreenEls)
     await this.displayCollection(
-      Math.max(index - halfScreenEls, 0),
-      this.oneScreenElsCount + halfScreenEls * 2
+      backOffset,
+      this.oneScreenElsCount + halfScreenEls * 2 - delta
     )
 
-    this.setLayoutShift(
+    const layoutShift =
       this.getLastScrollPosition() +
-        previousContainerSize -
-        this.getContainerSize()
-    )
+      previousContainerSize -
+      this.getContainerSize()
+
+    if (layoutShift >= 0) {
+      this.setLayoutShift(layoutShift)
+    } else {
+      const scrollPosition = this.getScrollPosition()
+      this.setScrollPosition(scrollPosition + Math.abs(layoutShift))
+    }
 
     this.finishProcess()
   }
