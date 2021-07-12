@@ -48,11 +48,6 @@ export default class FrontScrollScenario extends Scenario {
     )
     await this.displayCollection(this.lastDisplayedIndex, nextLength)
 
-    console.log(
-      this.lastCollectionLength > this.necessaryCollectionLength
-        ? 'Добавлять'
-        : 'Не добавлять'
-    )
     if (this.lastCollectionLength > this.necessaryCollectionLength) {
       const containerSize = this.getContainerSize()
       await this.displayCollection(
@@ -64,7 +59,7 @@ export default class FrontScrollScenario extends Scenario {
       this.setLayoutShift(this.layoutShift + Math.abs(layoutShift))
     }
 
-    if (this.lastDisplayedIndex + this.lastCollectionLength === this.total) {
+    if (this.lastDisplayedIndex + this.lastCollectionLength >= this.total) {
       const shiftDiff =
         this.layoutSize - (this.layoutShift + this.getContainerSize())
       this.setScrollPosition(this.getLastScrollPosition() + shiftDiff)

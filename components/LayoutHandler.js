@@ -45,10 +45,13 @@ export default class LayoutHandler {
     this._setLayoutSize = setLayoutSize
   }
 
-  computeLayoutSize({ total, displayCollectionLength }) {
+  computeLayoutSize({ total, displayCollectionLength, grid }) {
     this.firstCallOccurred = true
+    if (grid) {
+      displayCollectionLength = Math.ceil(displayCollectionLength / grid) * grid
+    }
     return (
-      Math.ceil(total / displayCollectionLength) * this.getElementSize() // Can be multiply on Approximately how many times will the content stretch after filling with data
+      (total / displayCollectionLength) * this.getElementSize() // Can be multiply on Approximately how many times will the content stretch after filling with data
     )
   }
 
@@ -97,7 +100,7 @@ export default class LayoutHandler {
     return parentNode[this._isHorizontal ? 'offsetWidth' : 'offsetHeight']
   }
 
-  initMutationObserver({ total, displayCollectionLength }) {
+  initMutationObserver({ total, displayCollectionLength, grid }) {
     return new Promise((resolve) => {
       if (this.mutationObserver) {
         this.mutationObserver.disconnect()
@@ -126,6 +129,7 @@ export default class LayoutHandler {
         const layoutSize = this.computeLayoutSize({
           total,
           displayCollectionLength,
+          grid,
         })
         this.handleMutationObserver(layoutSize)
         if (layoutSize || this.lastRequiredCollectionLength === 0) {

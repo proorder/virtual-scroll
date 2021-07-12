@@ -204,7 +204,10 @@ export default class Scenario {
 
   async displayCollection(index, length) {
     // TODO: Console
-    console.log('Инициализация запроса', length)
+    console.log(
+      `Инициализация запроса:${index} in ${this._collectionHandler.total}`,
+      length
+    )
     this._layoutHandler.lastRequiredCollectionLength = length
     let result
     while (!result) {
@@ -218,6 +221,7 @@ export default class Scenario {
       total: this._collectionHandler.total,
       displayCollectionLength: this._collectionHandler
         .lastRequiredCollectionLength,
+      grid: this.grid,
     }
   }
 
