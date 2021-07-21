@@ -12,17 +12,21 @@ export default class JumpScenario extends Scenario {
     console.log('Jump Init')
     this.setLastScrollPosition()
 
-    let index = this.getIndexByOffset()
-    const halfScreenEls = this.getHalfScreenEls(index, this.oneScreenElsCount)
-
-    await this.displayCollection(index, 0)
-
-    // Если выход за пределы коллекции
-    if (index + this.oneScreenElsCount + halfScreenEls > this.total) {
-      index = Math.max(this.total - (this.oneScreenElsCount + halfScreenEls), 0)
-    }
-
-    await this.displayCollection(index, this.oneScreenElsCount + halfScreenEls)
+    /*
+     |
+     |  Первая половина рассчетов. Из нее:
+     |  - getIndexByOffset
+     |  - getHalfScreenEls
+     |  - displayCollection 0
+     |  - Коррекция начального индекса на случай выхода коллекции за пределы
+     |  - Отображение displayCollection
+     |
+     */
+    const {
+      index,
+      halfScreenEls,
+      correctedDisplayLength,
+    } = await this.firstHalfPreparingData()
 
     if (index === 0) {
       this.setLayoutShift(0)
@@ -32,11 +36,10 @@ export default class JumpScenario extends Scenario {
 
     const previousContainerSize = this.getContainerSize()
 
-    const backOffset = Math.max(index - halfScreenEls, 0)
-    const delta = backOffset - Math.abs(index - halfScreenEls)
-    await this.displayCollection(
-      backOffset,
-      this.oneScreenElsCount + halfScreenEls * 2 - delta
+    await this.secondHalfPreparingData(
+      index,
+      halfScreenEls,
+      correctedDisplayLength
     )
 
     const layoutShift =
@@ -45,16 +48,17 @@ export default class JumpScenario extends Scenario {
       this.getContainerSize()
 
     if (layoutShift >= 0) {
-      // Если лэйаут вышел за пределы, необходимо уменьшить отступ и
-      // сохранить скролл
+      /*
+       |
+       |  Если лэйаут вышел за пределы, необходимо уменьшить отступ и
+       |  сохранить скролл
+       |
+       */
       if (layoutShift + this.getContainerSize() > this.layoutSize) {
         const rightLayoutShift = this.layoutSize - this.getContainerSize()
         this.setLayoutShift(rightLayoutShift)
         const scrollDelta = layoutShift - rightLayoutShift
         this.setScrollPosition(this.getScrollPosition() - scrollDelta)
-        await this.nextTick()
-        console.log('Scroll', this.getScrollPosition())
-        this.setLastScrollPosition()
       } else {
         this.setLayoutShift(layoutShift)
       }
@@ -64,5 +68,45 @@ export default class JumpScenario extends Scenario {
     }
 
     this.finishProcess()
+  }
+
+  async firstHalfPreparingData() {
+    let index = this.getIndexByOffset()
+    const halfScreenEls = this.getHalfScreenEls(index, this.oneScreenElsCount)
+
+    await this.displayCollection(index, 0)
+
+    let correctedDisplayLength = this.oneScreenElsCount + halfScreenEls
+    /*
+     |
+     |  Проверка на выход за пределы коллекции
+     |
+     */
+    const lastEl = index + this.oneScreenElsCount + halfScreenEls
+    if (lastEl > this.total) {
+      const correctedStartIndex =
+        this.total - (this.oneScreenElsCount + halfScreenEls) - 1
+      index = Math.max(correctedStartIndex, 0)
+      correctedDisplayLength = this.total - index
+    }
+
+    await this.displayCollection(index, correctedDisplayLength)
+    console.log(
+      index,
+      correctedDisplayLength,
+      this.oneScreenElsCount,
+      halfScreenEls
+    )
+
+    return { index, halfScreenEls, correctedDisplayLength }
+  }
+
+  async secondHalfPreparingData(index, halfScreenEls, correctedDisplayLength) {
+    const backOffset = Math.max(index - halfScreenEls, 0)
+    const delta = backOffset - Math.abs(index - halfScreenEls)
+    await this.displayCollection(
+      backOffset,
+      halfScreenEls + correctedDisplayLength - delta
+    )
   }
 }

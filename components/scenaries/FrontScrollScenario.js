@@ -29,8 +29,16 @@ export default class FrontScrollScenario extends Scenario {
 
     console.log('Front Scroll Init')
 
-    // Задача:
-    // Продолжать рендер approximatelyEls, только когда их величина достигла grid x2
+    if (this.lastDisplayedIndex + this.lastCollectionLength >= this.total - 1) {
+      return
+    }
+
+    /*
+     |
+     |  Задача:
+     |  Продолжать рендер approximatelyEls, только когда их величина достигла grid x2
+     |
+     */
     const notRoundedEls =
       Math.abs(diff) / this.oneElementSize + (this.previousNotRoundedEls || 0)
     if (notRoundedEls < 2) {
@@ -66,15 +74,23 @@ export default class FrontScrollScenario extends Scenario {
       this.setLayoutShift(this.layoutSize - this.getContainerSize())
     }
 
-    // Необходимо включить интервалами, а не на каждый рендер:
-    // await this.correctCollectionShift(layoutShift, approximatelyEls, diff)
+    /*
+     |
+     |  Необходимо включить интервалами, а не на каждый рендер:
+     |  await this.correctCollectionShift(layoutShift, approximatelyEls, diff)
+     |
+     */
 
     this.processBusy = false
     this.finishProcess()
   }
 
-  // Метод создает дополнительную корректировку коллекции, для более точного
-  // определения количества элементов, которые необходимо добавить
+  /*
+   |
+   |  Метод создает дополнительную корректировку коллекции, для более точного
+   |  определения количества элементов, которые необходимо добавить
+   |
+   */
   async correctCollectionShift(layoutShift, approximatelyEls, diff) {
     const previousAdded = approximatelyEls / this.grid
     const oneElementSize = layoutShift / previousAdded
