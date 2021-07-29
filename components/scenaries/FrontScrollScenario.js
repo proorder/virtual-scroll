@@ -15,6 +15,9 @@ export default class FrontScrollScenario extends Scenario {
   previousNotRoundedEls = null
 
   async process() {
+    const diff = this.getLastScrollPosition() - this.getScrollPosition()
+    this.setLastScrollPosition()
+
     if (
       this.lastDisplayedIndex + this.lastCollectionLength ===
       this.collectionLength
@@ -24,14 +27,7 @@ export default class FrontScrollScenario extends Scenario {
     }
     this.processBusy = true
 
-    const diff = this.getLastScrollPosition() - this.getScrollPosition()
-    this.setLastScrollPosition()
-
     console.log('Front Scroll Init')
-
-    if (this.lastDisplayedIndex + this.lastCollectionLength >= this.total - 1) {
-      return
-    }
 
     /*
      |

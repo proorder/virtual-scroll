@@ -8,7 +8,7 @@
       scroll-selector="document",
       @view="onChangeView"
     )
-      template(#default="{ displayCollection }")
+      template(#default="{ displayCollection }" )
         item-card(
           v-for="(item, index) in displayCollection",
           :key="index",

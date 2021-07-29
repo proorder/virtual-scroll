@@ -17,7 +17,7 @@ export default {
   },
   data() {
     return {
-      identify: true,
+      identify: false,
       currentItem: {
         title: '',
         label: '',

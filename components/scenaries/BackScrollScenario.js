@@ -53,15 +53,23 @@ export default class BackScrollScenario extends Scenario {
       this.setLayoutShift(0)
     }
 
-    // Необходимо включить интервалами, а не на каждый рендер:
-    // await this.correctCollectionShift(layoutShift, approximatelyEls, diff)
+    /*
+     |
+     |  Необходимо включить интервалами, а не на каждый рендер:
+     |  await this.correctCollectionShift(layoutShift, approximatelyEls, diff)
+     |
+     */
 
     this.processBusy = false
     this.finishProcess()
   }
 
-  // Метод выводит на экран элементы начиная с указанного индекса и задает
-  // layoutShift
+  /*
+   |
+   |  Метод выводит на экран элементы начиная с указанного индекса и задает
+   |  layoutShift
+   |
+   */
   async displayFromNextStartIndex(
     nextStartIndex,
     containerSize,
@@ -75,8 +83,12 @@ export default class BackScrollScenario extends Scenario {
     return layoutShift
   }
 
-  // Метод создает дополнительную корректировку коллекции, для более точного
-  // определения количества элементов, которые необходимо добавить
+  /*
+   |
+   |  Метод создает дополнительную корректировку коллекции, для более точного
+   |  определения количества элементов, которые необходимо добавить
+   |
+   */
   async correctCollectionShift(layoutShift, approximatelyEls, diff) {
     const previousAdded = approximatelyEls / this.grid
     const oneElementSize = layoutShift / previousAdded
