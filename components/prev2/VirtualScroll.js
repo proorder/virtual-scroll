@@ -1,16 +1,16 @@
 import cloneDeep from 'lodash.clonedeep'
 import deepEqual from 'fast-deep-equal'
 import ScrollFacade from './ScrollFacade'
-// import ScrollHandler from './ScrollHandler'
-// import LayoutHandler from './LayoutHandler'
-// import CollectionHandler from './CollectionHandler'
+import ScrollHandler from './ScrollHandler'
+import LayoutHandler from './LayoutHandler'
+import CollectionHandler from './CollectionHandler'
 
 export default {
   name: 'VirtualScroll',
   props: {
     grid: {
       type: Number,
-      default: null,
+      default: 0,
     },
     index: {
       type: Number,
@@ -40,18 +40,18 @@ export default {
       type: Array,
       default: () => [],
     },
-    // ScrollHandlerClass: {
-    //   type: Function,
-    //   default: ScrollHandler,
-    // },
-    // LayoutHandlerClass: {
-    //   type: Function,
-    //   default: LayoutHandler,
-    // },
-    // CollectionHandlerClass: {
-    //   type: Function,
-    //   default: CollectionHandler,
-    // },
+    ScrollHandlerClass: {
+      type: Function,
+      default: ScrollHandler,
+    },
+    LayoutHandlerClass: {
+      type: Function,
+      default: LayoutHandler,
+    },
+    CollectionHandlerClass: {
+      type: Function,
+      default: CollectionHandler,
+    },
   },
   data() {
     return {
@@ -105,6 +105,19 @@ export default {
         setDisplayCollection: this.setDisplayCollection,
       }
     },
+    setDisplayCollection({ displayCollection, viewingIndexes }) {
+      this.$set(this, 'displayCollection', displayCollection)
+      // if (!displayCollection.length) {
+      //   return
+      // }
+      this.$emit('view', viewingIndexes)
+    },
+    setLayoutSize(layoutSize) {
+      this.layoutSize = layoutSize
+    },
+    setLayoutShift(size) {
+      this.layoutShift = size
+    },
     initScrollFacade() {
       this.setupScrollElement()
       const {
@@ -124,8 +137,7 @@ export default {
     initScrollHandlers() {
       const layoutHandler = new this.LayoutHandlerClass({
         scrollElement: this.scrollElement,
-        // Трансмиттер покинул чат:
-        // layoutElement: this.$refs.transmitter,
+        layoutElement: this.$refs.transmitter,
         setLayoutShift: this.setLayoutShift,
         setLayoutSize: this.setLayoutSize,
       })
@@ -142,20 +154,12 @@ export default {
         layoutHandler,
       }
     },
-    /*
-     *
-     *  Методы обеспечивающие взаимодействие с Vue
-     *
-     */
-    setDisplayCollection({ displayCollection, viewingIndexes }) {
-      this.$set(this, 'displayCollection', displayCollection)
-      this.$emit('view', viewingIndexes)
-    },
-    setLayoutSize(layoutSize) {
-      this.layoutSize = layoutSize
-    },
-    setLayoutShift(size) {
-      this.layoutShift = size
+    setupScrollElement() {
+      this.scrollElement = this.scrollSelector
+        ? this.scrollSelector === 'document'
+          ? window
+          : document.querySelector(this.scrollSelector)
+        : document.documentElement || document.body
     },
   },
   render(h) {
@@ -166,21 +170,36 @@ export default {
           'scroll-container': true,
         },
         style: {
-          boxSizing: 'border-box',
           [this.isHorizontal ? 'width' : 'height']: this.layoutSize
             ? `${this.layoutSize}px`
             : 'auto',
-          paddingTop: `${this.layoutShift}px`,
         },
       },
       [
-        this.$scopedSlots.default &&
-          this.$scopedSlots.default({
-            displayCollectionPromises: this.isTable /* || notMeasuring */
-              ? this.displayCollectionPromises
-              : [],
-            displayCollection: this.displayCollection,
-          }),
+        h(
+          'div',
+          {
+            class: {
+              'scroll-container__transmitter': true,
+              ...Object.fromEntries(this.classes.map((i) => [i, true])),
+            },
+            style: {
+              transform: `translateY(${this.layoutShift}px)`,
+              // position: 'relative',
+              // top: `${this.layoutShift}px`,
+            },
+            ref: 'transmitter',
+          },
+          [
+            this.$scopedSlots.default &&
+              this.$scopedSlots.default({
+                displayCollectionPromises: this.isTable /* || notMeasuring */
+                  ? this.displayCollectionPromises
+                  : [],
+                displayCollection: this.displayCollection,
+              }),
+          ]
+        ),
       ]
     )
   },
