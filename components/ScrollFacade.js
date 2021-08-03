@@ -1,5 +1,5 @@
 import debounce from 'lodash.debounce'
-// import ScenarioManager from './ScenarioManager'
+import ScenarioManager from './ScenarioManager'
 
 export default class ScrollFacade {
   _scrollHandler = null
@@ -31,9 +31,9 @@ export default class ScrollFacade {
 
     this.setDisplayCollection = setDisplayCollection
 
-    // this.scenarioManager = new ScenarioManager(
-    //   this.buildContextForScenarioManager()
-    // )
+    this.scenarioManager = new ScenarioManager(
+      this.buildContextForScenarioManager()
+    )
   }
 
   buildContextForScenarioManager() {
@@ -48,7 +48,7 @@ export default class ScrollFacade {
 
   setCollection({ collection, minDisplayCollection, total, index }) {
     this._collectionHandler.setContext({ total, index })
-    this._collectionHandler.setCollection(collection)
+    this._collectionHandler.collection = collection
     this.scenarioManager.createEvent('collectionUpdated', {
       collection,
       minDisplayCollection,

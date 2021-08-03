@@ -1,9 +1,9 @@
 import cloneDeep from 'lodash.clonedeep'
 import deepEqual from 'fast-deep-equal'
 import ScrollFacade from './ScrollFacade'
-// import ScrollHandler from './ScrollHandler'
-// import LayoutHandler from './LayoutHandler'
-// import CollectionHandler from './CollectionHandler'
+import ScrollHandler from './ScrollHandler'
+import LayoutHandler from './LayoutHandler'
+import CollectionHandler from './CollectionHandler'
 
 export default {
   name: 'VirtualScroll',
@@ -40,18 +40,18 @@ export default {
       type: Array,
       default: () => [],
     },
-    // ScrollHandlerClass: {
-    //   type: Function,
-    //   default: ScrollHandler,
-    // },
-    // LayoutHandlerClass: {
-    //   type: Function,
-    //   default: LayoutHandler,
-    // },
-    // CollectionHandlerClass: {
-    //   type: Function,
-    //   default: CollectionHandler,
-    // },
+    ScrollHandlerClass: {
+      type: Function,
+      default: ScrollHandler,
+    },
+    LayoutHandlerClass: {
+      type: Function,
+      default: LayoutHandler,
+    },
+    CollectionHandlerClass: {
+      type: Function,
+      default: CollectionHandler,
+    },
   },
   data() {
     return {
@@ -141,6 +141,13 @@ export default {
         collectionHandler: this.collectionHandler,
         layoutHandler,
       }
+    },
+    setupScrollElement() {
+      this.scrollElement = this.scrollSelector
+        ? this.scrollSelector === 'document'
+          ? window
+          : document.querySelector(this.scrollSelector)
+        : document.documentElement || document.body
     },
     /*
      *
