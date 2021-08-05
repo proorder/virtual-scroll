@@ -37,6 +37,7 @@ export default class InitializeScenario extends Scenario {
      |
      */
     const oneScreenElsCount = this.computeOneScreenElementsCount(oneElementSize)
+
     /*
      |
      |  Данное количество, отнимаемое от index будет являться
@@ -46,17 +47,24 @@ export default class InitializeScenario extends Scenario {
      */
     const halfScreenEls = this.getHalfScreenEls(index, oneScreenElsCount)
     this.necessaryCollectionLength = oneScreenElsCount + halfScreenEls * 2
+
     /*
      |
      |  Команда: Вывести полтора экрана элементов
      |
      */
+    // eslint-disable-next-line no-unused-vars
     const { layoutSize: intermediateLayoutSize } = await this.displayCollection(
       index,
       oneScreenElsCount + halfScreenEls
     )
     this.setOffset()
 
+    /*
+     |
+     |  TODO: Разобраться на самом деле как работает следующий блок
+     |
+     */
     if (this.lastDisplayedIndex > 0) {
       const previousContainerSize = this.getContainerSize()
       /*
@@ -75,11 +83,10 @@ export default class InitializeScenario extends Scenario {
        |  Команда: Сместить отступ контейнера
        |
        */
-      this.setLayoutShift(
+      this.layoutShift =
         this.getLastScrollPosition() +
-          previousContainerSize -
-          this.getContainerSize()
-      )
+        previousContainerSize -
+        this.getContainerSize()
 
       await this.setLayoutSize(lastLayoutSize)
     } else {
@@ -93,20 +100,4 @@ export default class InitializeScenario extends Scenario {
      */
     this.finishProcess()
   }
-
-  /*
-   |
-   |  Смещает начальный индекс отображаемой коллекции к началу
-   |  Сна количество элементов равное половине экрана
-   |
-   */
-  setDisplayCollectionPrefix() {}
-
-  /*
-   |
-   |  Смещает конечный индекс отображаемой коллекции к концу
-   |  на количество элементов равное половине экрана
-   |
-   */
-  setDisplayCollectionSuffix() {}
 }

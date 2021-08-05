@@ -73,7 +73,7 @@ export default class Scenario {
    *  Передается из virtual-scroll компонента. Устанавливает коллекцию.
    *
    */
-  _setDisplayCollection = ({ displayCollection }) => {}
+  $setDisplayCollection = ({ displayCollection }) => {}
 
   get lastDisplayedIndex() {
     return this._collectionHandler.lastDisplayedIndex
@@ -143,7 +143,7 @@ export default class Scenario {
   }
 
   getContainerSize() {
-    return this._layoutHandler.getElementSize()
+    return this._layoutHandler.layoutElement.size
   }
 
   /*
@@ -154,9 +154,7 @@ export default class Scenario {
   setLayoutSize(layoutSize) {
     this._layoutHandler.layoutSize = layoutSize
     this._layoutHandler.setLayoutSize(layoutSize)
-    return new Promise((resolve) => {
-      this.nextTick().then(resolve)
-    })
+    return this.nextTick()
   }
 
   get layoutSize() {
@@ -205,7 +203,7 @@ export default class Scenario {
   /*
    *
    *  Получает коллекцию из CollectionHandler.
-   *  Вызывает _setDisplayCollection, тем самым выводит коллекцию на дисплей.
+   *  Вызывает $setDisplayCollection, тем самым выводит коллекцию на дисплей.
    *  Дожидается рендера элементов и вызывает resolve.
    *
    */
@@ -236,7 +234,7 @@ export default class Scenario {
           this.subscribers.collection = null
           resolve(result)
         })
-      this._setDisplayCollection({ displayCollection, viewingIndexes })
+      this.$setDisplayCollection({ displayCollection, viewingIndexes })
     })
   }
 
@@ -259,6 +257,7 @@ export default class Scenario {
       total: this._collectionHandler.total,
       displayCollectionLength: this._collectionHandler
         .lastRequiredCollectionLength,
+      changes: this._collectionHandler.changes,
       grid: this.grid,
     }
   }
@@ -313,7 +312,7 @@ export default class Scenario {
 
     this.grid = grid
 
-    this._setDisplayCollection = setDisplayCollection
+    this.$setDisplayCollection = setDisplayCollection
   }
 
   /*

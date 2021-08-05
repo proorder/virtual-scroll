@@ -4,10 +4,10 @@ export default class LayoutHandler {
   firstCallOccurred = false
 
   /*
-   *
-   *  В общем случае, используется
-   *  для проверки на необходимое количество мутаций
-   *
+   |
+   |  В общем случае, используется
+   |  для проверки на необходимое количество мутаций
+   |
    */
   collectionMemento = {
     lastMutationRecords: 0, // is length
@@ -15,7 +15,7 @@ export default class LayoutHandler {
     lastRequiredCollection: 0, // is length
     // eslint-disable-next-line accessor-pairs
     set addMutationRecords(recordsLength) {
-      this.lastMutationRecords = this.lastMutationRecords + recordsLength
+      this.lastMutationRecords += recordsLength
     },
     get deltaRequiredCollections() {
       return this.lastRequiredCollection - this.previousRequiredCollection
@@ -28,9 +28,9 @@ export default class LayoutHandler {
   }
 
   /*
-   *
-   *  Используется в Scenario при запросе новой displayCollection
-   *
+   |
+   |  Используется в Scenario при запросе новой displayCollection
+   |
    */
   // eslint-disable-next-line accessor-pairs
   set lastRequiredCollectionLength(length) {
@@ -43,9 +43,9 @@ export default class LayoutHandler {
   necessaryCollectionLength = null
 
   /*
-   *
-   *  Layout Shift Block
-   *
+   |
+   |  Layout Shift Block
+   |
    */
   // region layoutShift
 
@@ -64,9 +64,9 @@ export default class LayoutHandler {
   // endregion layoutShift
 
   /*
-   *
-   *  Layout Size Block
-   *
+   |
+   |  Layout Size Block
+   |
    */
   // region layoutSize
 
@@ -77,9 +77,25 @@ export default class LayoutHandler {
 
   oneElementSize = null
 
-  // TODO: Реализовать
   layoutElement = {
-    get size() {},
+    _highCtx: this,
+    _container: null,
+    set container(value) {
+      this._container = value
+    },
+    get container() {
+      return this._container
+    },
+    get size() {
+      if (!this.container.childElementCount) {
+        return 0
+      }
+      const childCount = this.container.childElementCount
+      const filled =
+        this.container.children[childCount - 1].offsetTop +
+        this.container.children[childCount - 1].offsetHeight
+      return filled - this.container.children[0].offsetTop
+    },
   }
 
   computeLayoutSize({ total, displayCollectionLength, grid }) {
@@ -88,16 +104,16 @@ export default class LayoutHandler {
       displayCollectionLength = Math.ceil(displayCollectionLength / grid) * grid
     }
     return (
-      (total / displayCollectionLength) * this.getElementSize() // Can be multiply on Approximately how many times will the content stretch after filling with data
+      (total / displayCollectionLength) * this.layoutElement.size // Can be multiply on Approximately how many times will the content stretch after filling with data
     )
   }
 
   computeOneElementSize(displayCollectionLength, grid) {
-    if (!grid) {
-      return Math.ceil(this.getElementSize() / displayCollectionLength)
+    if (!grid || grid === 1) {
+      return Math.ceil(this.layoutElement.size / displayCollectionLength)
     }
     this.oneElementSize = Math.ceil(
-      this.getElementSize() / Math.ceil(displayCollectionLength / grid)
+      this.layoutElement.size / Math.ceil(displayCollectionLength / grid)
     )
     return this.oneElementSize
   }
@@ -112,12 +128,6 @@ export default class LayoutHandler {
 
   setLayoutSize(layoutSize = this.layoutSize) {
     this.$setLayoutSize(layoutSize)
-  }
-
-  getElementSize() {
-    return (
-      this._layoutElement.offsetHeight || this._layoutElement.innerHeight || 0
-    )
   }
 
   getParentContainerSize() {
@@ -136,26 +146,27 @@ export default class LayoutHandler {
 
   // endregion layoutSize
 
-  constructor({ scrollElement, setLayoutShift, setLayoutSize }) {
+  constructor({ scrollElement, layoutElement, setLayoutShift, setLayoutSize }) {
     this._scrollElement = scrollElement
+    this.layoutElement.container = layoutElement
     this.$setLayoutShift = setLayoutShift
     this.$setLayoutSize = setLayoutSize
   }
 
-  initMutationObserver({ total, displayCollectionLength, grid }) {
+  initMutationObserver({ total, displayCollectionLength, grid, changes }) {
     return new Promise((resolve) => {
       if (this.mutationObserver) {
         this.mutationObserver.disconnect()
       }
       this.mutationObserver = new MutationObserver((mutationRecords) => {
-        mutationRecords = mutationRecords.filter(
-          (m) => m.type === 'childList' && m.addedNodes.length
-        )
+        // mutationRecords = mutationRecords.filter(
+        //   (m) => m.type === 'childList' && m.addedNodes.length
+        // )
         if (this.checkMutationObserverFalseSignal()) {
           return
         }
 
-        if (this.checkEnoughMutationRecords(mutationRecords)) {
+        if (!this.checkEnoughMutationRecords(mutationRecords, changes)) {
           return
         }
 
@@ -175,7 +186,7 @@ export default class LayoutHandler {
           })
         }
       })
-      this.mutationObserver.observe(this._layoutElement, {
+      this.mutationObserver.observe(this.layoutElement.container, {
         childList: true,
         characterData: true,
         subtree: true,
@@ -189,24 +200,50 @@ export default class LayoutHandler {
   }
 
   /*
-   *
-   *  Finite-state machine methods
-   *
+   |
+   |  Finite-state machine methods
+   |
    */
   checkMutationObserverFalseSignal() {
     return (
-      !this.layoutElement.height &&
+      !this.layoutElement.size &&
       this.collectionMemento.lastRequiredCollection > 0
     )
   }
 
-  checkEnoughMutationRecords(mutationRecords) {
-    this.collectionMemento.addMutationRecords = mutationRecords.length
+  checkEnoughMutationRecords(mutationRecords, changes) {
+    console.log(JSON.stringify(changes))
 
-    return Boolean(
-      this.collectionMemento.lastMutationRecords <
-        this.collectionMemento.deltaRequiredCollections &&
-        this.collectionMemento.lastRequiredCollection > 0
-    )
+    console.log(mutationRecords)
+    for (const mutation of mutationRecords) {
+      if (mutation.oldValue && mutation.type === 'characterData') {
+        changes.decChanged()
+        continue
+      }
+      if (
+        mutation.removedNodes.length &&
+        !(mutation.removedNodes[0] instanceof Comment)
+      ) {
+        changes.decRemoved()
+        continue
+      }
+      if (mutation.addedNodes.length) {
+        changes.decAdded()
+        continue
+      }
+    }
+    // added
+    // changed
+    // removed
+    // this.collectionMemento.addMutationRecords = mutationRecords.length
+
+    console.log('Finish', JSON.stringify(changes))
+    return changes.isPass()
+
+    // return Boolean(
+    //   this.collectionMemento.lastMutationRecords <
+    //     this.collectionMemento.deltaRequiredCollections &&
+    //     this.collectionMemento.lastRequiredCollection > 0
+    // )
   }
 }

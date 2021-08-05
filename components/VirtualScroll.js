@@ -14,7 +14,7 @@ export default {
     },
     index: {
       type: Number,
-      default: 0,
+      default: 100,
     },
     min: {
       type: Number,
@@ -124,8 +124,7 @@ export default {
     initScrollHandlers() {
       const layoutHandler = new this.LayoutHandlerClass({
         scrollElement: this.scrollElement,
-        // Трансмиттер покинул чат:
-        // layoutElement: this.$refs.transmitter,
+        layoutElement: this.$el,
         setLayoutShift: this.setLayoutShift,
         setLayoutSize: this.setLayoutSize,
       })
@@ -155,6 +154,7 @@ export default {
      *
      */
     setDisplayCollection({ displayCollection, viewingIndexes }) {
+      console.log('Ну прикинь', displayCollection.length)
       this.$set(this, 'displayCollection', displayCollection)
       this.$emit('view', viewingIndexes)
     },
@@ -171,6 +171,7 @@ export default {
       {
         class: {
           'scroll-container': true,
+          ...Object.fromEntries(this.classes.map((i) => [i, true])),
         },
         style: {
           boxSizing: 'border-box',

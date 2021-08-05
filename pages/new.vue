@@ -60,7 +60,7 @@ export default {
   methods: {
     fetch(page) {
       return new Promise((resolve) => {
-        const url = `http://localhost:3332/resources/?limit=14&page=${page}&query=&filter=%2Fgroups%2Fid+eq+%228aeba98c-f944-401b-b25d-45e9ebaf5015%22&sortBy=updatedAt&sortDir=asc&display=model&values=`
+        const url = `http://localhost:3332/resources/?limit=14&page=${page}&query=&filter=%2Fgroups%2Fid+eq+%228aeba98c-f944-401b-b25d-45e9ebaf5015%22&sortBy=name&sortDir=asc&display=model&values=`
         fetch(url)
           .then((r) => r.json())
           .then((response) => {
@@ -126,7 +126,10 @@ body
   height 100vh
 .page-items-list
   display grid
+  align-items baseline
   grid-template-columns repeat(3, 1fr)
+  grid-template-rows none
+  grid-auto-rows max-content
   grid-column-gap 10px
   grid-row-gap 10px
 </style>
