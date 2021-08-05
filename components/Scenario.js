@@ -220,14 +220,13 @@ export default class Scenario {
     this.subscribers.collection.promise = new Promise((resolve) => {
       this.subscribers.collection.resolve = resolve
     })
+    this.subscribers.collection.promise.then((eventName) => {
+      const {
+        displayCollection,
+      } = this._collectionHandler.getDisplayCollection(index, amount)
+      this.$setDisplayCollection({ displayCollection })
+    })
     return new Promise((resolve) => {
-      this.subscribers.collection.promise.then((eventName) => {
-        this.subscribers.collection = null
-        if (eventName === 'scroll') {
-          return
-        }
-        resolve()
-      })
       this._layoutHandler
         .initMutationObserver(this.computeLayoutSizeContext())
         .then((result) => {
@@ -292,6 +291,9 @@ export default class Scenario {
         return
       }
       this.process(payload)
+      return
+    }
+    if (event === 'scroll') {
       return
     }
     const resolve = this.subscribers.collection.resolve

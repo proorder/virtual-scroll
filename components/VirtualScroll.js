@@ -156,7 +156,9 @@ export default {
     setDisplayCollection({ displayCollection, viewingIndexes }) {
       console.log('Ну прикинь', displayCollection.length)
       this.$set(this, 'displayCollection', displayCollection)
-      this.$emit('view', viewingIndexes)
+      if (viewingIndexes) {
+        this.$emit('view', viewingIndexes)
+      }
     },
     setLayoutSize(layoutSize) {
       this.layoutSize = layoutSize

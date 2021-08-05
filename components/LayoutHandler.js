@@ -159,14 +159,14 @@ export default class LayoutHandler {
         this.mutationObserver.disconnect()
       }
       this.mutationObserver = new MutationObserver((mutationRecords) => {
-        // mutationRecords = mutationRecords.filter(
-        //   (m) => m.type === 'childList' && m.addedNodes.length
-        // )
+        mutationRecords = mutationRecords.filter(
+          (m) => m.type === 'childList' && m.addedNodes.length
+        )
         if (this.checkMutationObserverFalseSignal()) {
           return
         }
 
-        if (!this.checkEnoughMutationRecords(mutationRecords, changes)) {
+        if (this.checkEnoughMutationRecords(mutationRecords, changes)) {
           return
         }
 
@@ -212,38 +212,38 @@ export default class LayoutHandler {
   }
 
   checkEnoughMutationRecords(mutationRecords, changes) {
-    console.log(JSON.stringify(changes))
-
-    console.log(mutationRecords)
-    for (const mutation of mutationRecords) {
-      if (mutation.oldValue && mutation.type === 'characterData') {
-        changes.decChanged()
-        continue
-      }
-      if (
-        mutation.removedNodes.length &&
-        !(mutation.removedNodes[0] instanceof Comment)
-      ) {
-        changes.decRemoved()
-        continue
-      }
-      if (mutation.addedNodes.length) {
-        changes.decAdded()
-        continue
-      }
-    }
+    // console.log(JSON.stringify(changes))
+    //
+    // console.log(mutationRecords)
+    // for (const mutation of mutationRecords) {
+    //   if (mutation.oldValue && mutation.type === 'characterData') {
+    //     changes.decChanged()
+    //     continue
+    //   }
+    //   if (
+    //     mutation.removedNodes.length &&
+    //     !(mutation.removedNodes[0] instanceof Comment)
+    //   ) {
+    //     changes.decRemoved()
+    //     continue
+    //   }
+    //   if (mutation.addedNodes.length) {
+    //     changes.decAdded()
+    //     continue
+    //   }
+    // }
     // added
     // changed
     // removed
-    // this.collectionMemento.addMutationRecords = mutationRecords.length
+    this.collectionMemento.addMutationRecords = mutationRecords.length
 
-    console.log('Finish', JSON.stringify(changes))
-    return changes.isPass()
+    // console.log('Finish', JSON.stringify(changes))
+    // return changes.isPass()
 
-    // return Boolean(
-    //   this.collectionMemento.lastMutationRecords <
-    //     this.collectionMemento.deltaRequiredCollections &&
-    //     this.collectionMemento.lastRequiredCollection > 0
-    // )
+    return Boolean(
+      this.collectionMemento.lastMutationRecords <
+        this.collectionMemento.deltaRequiredCollections &&
+        this.collectionMemento.lastRequiredCollection > 0
+    )
   }
 }

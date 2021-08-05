@@ -84,11 +84,6 @@ export default class CollectionHandler {
     return {
       displayCollection,
       viewingIndexes: [startIndex, Math.max(startIndex + amount - 1, 0)],
-      missingElementIndex:
-        displayCollection.length < amount
-          ? startIndex + displayCollection.length
-          : null,
-      endMissingElementIndex: startIndex + amount - displayCollection.length,
     }
   }
 }
