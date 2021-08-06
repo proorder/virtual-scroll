@@ -135,6 +135,7 @@ export default {
       this.collectionHandler = new this.CollectionHandlerClass({
         layoutHandler,
       })
+      layoutHandler.registerCollectionHandler(this.collectionHandler)
       return {
         scrollHandler: this.scrollHandler,
         collectionHandler: this.collectionHandler,
@@ -154,7 +155,10 @@ export default {
      *
      */
     setDisplayCollection({ displayCollection, viewingIndexes }) {
-      console.log('Ну прикинь', displayCollection.length)
+      console.log(
+        'VirtualScroll:setDisplayCollection displayCollection.length',
+        displayCollection.length
+      )
       this.$set(this, 'displayCollection', displayCollection)
       if (viewingIndexes) {
         this.$emit('view', viewingIndexes)
@@ -181,6 +185,8 @@ export default {
             ? `${this.layoutSize}px`
             : 'auto',
           paddingTop: `${this.layoutShift}px`,
+          // transform: `matrix3d(1,0,0,0,0,1,0,0,0,0,1,0,0,${this.layoutShift},0,1)`,
+          // transform: `translateY(${this.layoutShift}px)`,
         },
       },
       [

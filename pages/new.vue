@@ -126,7 +126,7 @@ body
   height 100vh
 .page-items-list
   display grid
-  align-items baseline
+  align-items stretch
   grid-template-columns repeat(3, 1fr)
   grid-template-rows none
   grid-auto-rows max-content

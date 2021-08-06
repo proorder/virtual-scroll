@@ -10,20 +10,6 @@ export default class CollectionHandler {
 
   changes = {
     changed: 0,
-    added: 0,
-    removed: 0,
-    decChanged() {
-      this.changed -= 1
-    },
-    decAdded() {
-      this.added -= 1
-    },
-    decRemoved() {
-      this.removed -= 1
-    },
-    isPass() {
-      return this.added + this.removed === 0
-    },
   }
 
   set collection(value) {
@@ -62,14 +48,6 @@ export default class CollectionHandler {
       this.lastDisplayedIndex + this.lastRequiredCollectionLength
     )
     this.changes.changed = Math.max(end - start, 0)
-    this.changes.added = Math.max(
-      amount - (this.lastRequiredCollectionLength || 0),
-      0
-    )
-    this.changes.removed = Math.max(
-      (this.lastRequiredCollectionLength || 0) - amount,
-      0
-    )
   }
 
   getDisplayCollection(startIndex, amount) {

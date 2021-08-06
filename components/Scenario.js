@@ -125,9 +125,8 @@ export default class Scenario {
   }
 
   setLastScrollPosition(value = false) {
-    this._scrollHandler.setLastScrollPosition(
+    this._scrollHandler.lastScroll =
       typeof value === 'boolean' ? this.getScrollPosition() : value
-    )
   }
 
   getLastScrollPosition() {
@@ -188,9 +187,7 @@ export default class Scenario {
   }
 
   getIndexByOffset() {
-    const els =
-      this._scrollHandler.getScrollPosition() /
-      this._layoutHandler.oneElementSize
+    const els = this._scrollHandler.scroll / this._layoutHandler.oneElementSize
     return Math.floor(els) * this.grid
   }
 
@@ -221,6 +218,7 @@ export default class Scenario {
       this.subscribers.collection.resolve = resolve
     })
     this.subscribers.collection.promise.then((eventName) => {
+      console.log('Догруз в коллекцию')
       const {
         displayCollection,
       } = this._collectionHandler.getDisplayCollection(index, amount)
@@ -243,7 +241,6 @@ export default class Scenario {
       `Инициализация запроса:${index} in ${this._collectionHandler.total}`,
       length
     )
-    this._layoutHandler.lastRequiredCollectionLength = length
     let result
     while (!result) {
       result = await this.setDisplayCollection(index, length)

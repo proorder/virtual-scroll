@@ -3,38 +3,9 @@ export default class LayoutHandler {
 
   firstCallOccurred = false
 
-  /*
-   |
-   |  В общем случае, используется
-   |  для проверки на необходимое количество мутаций
-   |
-   */
-  collectionMemento = {
-    lastMutationRecords: 0, // is length
-    previousRequiredCollection: 0, // is length
-    lastRequiredCollection: 0, // is length
-    // eslint-disable-next-line accessor-pairs
-    set addMutationRecords(recordsLength) {
-      this.lastMutationRecords += recordsLength
-    },
-    get deltaRequiredCollections() {
-      return this.lastRequiredCollection - this.previousRequiredCollection
-    },
-    // eslint-disable-next-line accessor-pairs
-    set requiredCollection(length) {
-      this.previousRequiredCollection = this.lastRequiredCollection
-      this.lastRequiredCollection = length
-    },
-  }
-
-  /*
-   |
-   |  Используется в Scenario при запросе новой displayCollection
-   |
-   */
-  // eslint-disable-next-line accessor-pairs
-  set lastRequiredCollectionLength(length) {
-    this.collectionMemento.requiredCollection = length
+  _collectionHandler = null
+  registerCollectionHandler(collectionHandler) {
+    this._collectionHandler = collectionHandler
   }
 
   /*
@@ -153,7 +124,7 @@ export default class LayoutHandler {
     this.$setLayoutSize = setLayoutSize
   }
 
-  initMutationObserver({ total, displayCollectionLength, grid, changes }) {
+  initMutationObserver({ displayCollectionLength, grid, changes }) {
     return new Promise((resolve) => {
       if (this.mutationObserver) {
         this.mutationObserver.disconnect()
@@ -166,17 +137,20 @@ export default class LayoutHandler {
           return
         }
 
-        if (this.checkEnoughMutationRecords(mutationRecords, changes)) {
+        if (!this.checkEnoughMutationRecords(mutationRecords, changes)) {
           return
         }
 
         const layoutSize = this.computeLayoutSize({
-          total,
+          total: this._collectionHandler.total,
           displayCollectionLength,
           grid,
         })
         this.handleMutationObserver(layoutSize)
-        if (layoutSize || this.collectionMemento.lastRequiredCollection === 0) {
+        if (
+          layoutSize ||
+          this._collectionHandler.lastRequiredCollectionLength === 0
+        ) {
           this._lastMutationRecordsLength = 0
           this.mutationObserver.disconnect()
           resolve({
@@ -189,7 +163,7 @@ export default class LayoutHandler {
       this.mutationObserver.observe(this.layoutElement.container, {
         childList: true,
         characterData: true,
-        subtree: true,
+        subtree: false,
         characterDataOldValue: true,
       })
     })
@@ -207,43 +181,18 @@ export default class LayoutHandler {
   checkMutationObserverFalseSignal() {
     return (
       !this.layoutElement.size &&
-      this.collectionMemento.lastRequiredCollection > 0
+      this._collectionHandler.lastRequiredCollectionLength > 0
     )
   }
 
   checkEnoughMutationRecords(mutationRecords, changes) {
-    // console.log(JSON.stringify(changes))
-    //
-    // console.log(mutationRecords)
-    // for (const mutation of mutationRecords) {
-    //   if (mutation.oldValue && mutation.type === 'characterData') {
-    //     changes.decChanged()
-    //     continue
-    //   }
-    //   if (
-    //     mutation.removedNodes.length &&
-    //     !(mutation.removedNodes[0] instanceof Comment)
-    //   ) {
-    //     changes.decRemoved()
-    //     continue
-    //   }
-    //   if (mutation.addedNodes.length) {
-    //     changes.decAdded()
-    //     continue
-    //   }
-    // }
-    // added
-    // changed
-    // removed
-    this.collectionMemento.addMutationRecords = mutationRecords.length
-
-    // console.log('Finish', JSON.stringify(changes))
-    // return changes.isPass()
-
-    return Boolean(
-      this.collectionMemento.lastMutationRecords <
-        this.collectionMemento.deltaRequiredCollections &&
-        this.collectionMemento.lastRequiredCollection > 0
+    console.log(
+      this._collectionHandler.lastRequiredCollectionLength - changes.changed,
+      mutationRecords.length
     )
+    const delta =
+      this._collectionHandler.lastRequiredCollectionLength - changes.changed
+    changes.changed += mutationRecords.length
+    return delta === mutationRecords.length
   }
 }
