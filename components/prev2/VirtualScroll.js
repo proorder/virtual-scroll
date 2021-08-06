@@ -1,22 +1,36 @@
+import cloneDeep from 'lodash.clonedeep'
+import deepEqual from 'fast-deep-equal'
 import ScrollFacade from './ScrollFacade'
 import ScrollHandler from './ScrollHandler'
 import LayoutHandler from './LayoutHandler'
 import CollectionHandler from './CollectionHandler'
 
 export default {
-  name: 'ScrollContainer',
+  name: 'VirtualScroll',
   props: {
-    page: {
+    grid: {
       type: Number,
-      default: 1,
+      default: 0,
     },
-    scrollSelector: {
-      type: [String, Object],
-      default: null,
+    index: {
+      type: Number,
+      default: 0,
+    },
+    min: {
+      type: Number,
+      default: 4,
     },
     collection: {
       type: Array,
       default: () => [],
+    },
+    total: {
+      type: Number,
+      default: 0,
+    },
+    scrollSelector: {
+      type: [String, Object],
+      default: null,
     },
     isTable: {
       type: Boolean,
@@ -41,65 +55,104 @@ export default {
   },
   data() {
     return {
-      collectionHandler: null,
       displayCollectionPromises: [],
       displayCollection: [],
       scrollElement: null,
+      collectionHandler: null,
+      scrollHandler: null,
       scrollFacade: null,
       layoutSize: null,
+      layoutShift: 0,
     }
   },
   watch: {
     collection: {
       immediate: true,
-      handler(value) {
-        if (!process.client) {
+      handler(collection) {
+        if (
+          !process.client ||
+          (this.scrollFacade &&
+            deepEqual(
+              collection.map(({ index: i }) => i),
+              this.scrollFacade.currentCollection.map(({ index: i }) => i)
+            ))
+        ) {
           return
         }
         if (this.scrollFacade) {
-          this.fillCollection(value)
+          this.scrollFacade.setCollection(this.buildContext(collection))
           return
         }
-        this.displayCollection = value
         this.$nextTick(() => {
           this.initScrollFacade()
-          this.fillCollection(value)
+          this.scrollFacade.setCollection(this.buildContext(collection))
         })
       },
     },
   },
+  beforeDestroy() {
+    if (this.scrollFacade) {
+      this.scrollFacade.destroyScroll()
+    }
+  },
   methods: {
-    fillCollection(collection) {
-      const { displayCollection } = this.scrollFacade.getDisplayCollection({
-        collection,
-        page: this.page,
-      })
-      this.displayCollection = displayCollection
-      setTimeout(() => {
-        const { layoutSize } = this.scrollFacade.computeLayoutSize()
-        if (layoutSize) {
-          this.setLayoutSize(layoutSize)
-        }
-      }, 20)
+    buildContext(collection = this.collection) {
+      return {
+        collection: cloneDeep(collection),
+        total: this.total,
+        minDisplayCollection: this.min,
+        index: this.index,
+        setDisplayCollection: this.setDisplayCollection,
+      }
+    },
+    setDisplayCollection({ displayCollection, viewingIndexes }) {
+      this.$set(this, 'displayCollection', displayCollection)
+      // if (!displayCollection.length) {
+      //   return
+      // }
+      this.$emit('view', viewingIndexes)
     },
     setLayoutSize(layoutSize) {
       this.layoutSize = layoutSize
     },
+    setLayoutShift(size) {
+      this.layoutShift = size
+    },
     initScrollFacade() {
       this.setupScrollElement()
-      const scrollHandler = new this.ScrollHandlerClass()
+      const {
+        scrollHandler,
+        collectionHandler,
+        layoutHandler,
+      } = this.initScrollHandlers()
+      this.scrollFacade = new ScrollFacade({
+        scrollHandler,
+        collectionHandler,
+        layoutHandler,
+        setDisplayCollection: this.setDisplayCollection,
+        grid: this.grid,
+      })
+      this.scrollFacade.initScroll()
+    },
+    initScrollHandlers() {
       const layoutHandler = new this.LayoutHandlerClass({
         scrollElement: this.scrollElement,
         layoutElement: this.$refs.transmitter,
+        setLayoutShift: this.setLayoutShift,
+        setLayoutSize: this.setLayoutSize,
+      })
+      this.scrollHandler = new this.ScrollHandlerClass({
+        layoutHandler,
+        scrollElement: this.scrollElement,
       })
       this.collectionHandler = new this.CollectionHandlerClass({
         layoutHandler,
       })
-      this.scrollFacade = new ScrollFacade({
-        scrollHandler,
+      return {
+        scrollHandler: this.scrollHandler,
         collectionHandler: this.collectionHandler,
         layoutHandler,
-      })
+      }
     },
     setupScrollElement() {
       this.scrollElement = this.scrollSelector
@@ -129,6 +182,11 @@ export default {
             class: {
               'scroll-container__transmitter': true,
               ...Object.fromEntries(this.classes.map((i) => [i, true])),
+            },
+            style: {
+              transform: `translateY(${this.layoutShift}px)`,
+              // position: 'relative',
+              // top: `${this.layoutShift}px`,
             },
             ref: 'transmitter',
           },

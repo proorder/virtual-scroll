@@ -1,10 +1,13 @@
 <template lang="pug">
   .container
     scroll-container(
+      :indexes="indexes",
+      :total="total",
       :collection="items",
       :classes="['page-items-list']",
+      :grid="4",
       scroll-selector="document",
-      @loadPage="onLoadPage"
+      @load="onLoad"
     )
       template(#default="{ displayCollection }")
         item-card(
@@ -17,6 +20,7 @@
 <script>
 import { v4 as uuid } from 'uuid'
 import itemsList from '~/assets/server-response.json'
+// import { pageToIndexes } from '~/components/helpers/calculateElementsScope'
 
 function generatePage(page) {
   return itemsList.map((item, index) => {
@@ -35,10 +39,15 @@ export default {
       page: 1,
       total: 500,
       limit: 14,
-      lastPage: Math.ceil(140 / 14),
+      lastPage: Math.ceil(500 / 14),
       items: generatePage(1),
       paginationHandler: null,
     }
+  },
+  computed: {
+    indexes() {
+      return [0, this.items.length - 1]
+    },
   },
   watch: {
     page(value) {
@@ -49,12 +58,22 @@ export default {
     },
   },
   methods: {
-    async onLoadPage(page) {
-      const promise = new Promise((resolve) => {
-        resolve(generatePage(page))
-      })
-      this.pushItemsToCollection(await promise)
+    onLoad(startIndex, endIndex) {
+      const load = () => {
+        this.page = this.page + 1
+        this.pushItemsToCollection(generatePage(this.page))
+        if (this.items.length - 1 < endIndex) {
+          load()
+        }
+      }
+      load()
     },
+    // async onLoadPage(page) {
+    //   const promise = new Promise((resolve) => {
+    //     resolve(generatePage(page))
+    //   })
+    //   this.pushItemsToCollection(await promise)
+    // },
     pushItemsToCollection(items) {
       this.items.push(...items)
     },
@@ -72,7 +91,7 @@ body
   height 100vh
 .page-items-list
   display grid
-  grid-template-columns repeat(4, 1fr)
+  grid-template-columns repeat(3, 1fr)
   grid-column-gap 10px
   grid-row-gap 10px
 </style>

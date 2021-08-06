@@ -9,11 +9,7 @@ export default class ScrollHandler {
     return this._scrollElement
   }
 
-  set lastScroll(value) {
-    this._lastScroll = value
-  }
-
-  get lastScroll() {
+  get scroll() {
     return this._lastScroll
   }
 
@@ -22,7 +18,11 @@ export default class ScrollHandler {
     this.scrollElement.scrollTop = value
   }
 
-  get scroll() {
+  setLastScrollPosition(value) {
+    this._lastScroll = value
+  }
+
+  getScrollPosition() {
     return this.scrollElement.scrollTop
   }
 

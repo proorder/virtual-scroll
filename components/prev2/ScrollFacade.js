@@ -48,7 +48,7 @@ export default class ScrollFacade {
 
   setCollection({ collection, minDisplayCollection, total, index }) {
     this._collectionHandler.setContext({ total, index })
-    this._collectionHandler.collection = collection
+    this._collectionHandler.setCollection(collection)
     this.scenarioManager.createEvent('collectionUpdated', {
       collection,
       minDisplayCollection,
