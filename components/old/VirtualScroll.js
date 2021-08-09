@@ -10,11 +10,11 @@ export default {
   props: {
     grid: {
       type: Number,
-      default: 0,
+      default: null,
     },
     index: {
       type: Number,
-      default: 0,
+      default: 100,
     },
     min: {
       type: Number,
@@ -105,19 +105,6 @@ export default {
         setDisplayCollection: this.setDisplayCollection,
       }
     },
-    setDisplayCollection({ displayCollection, viewingIndexes }) {
-      this.$set(this, 'displayCollection', displayCollection)
-      // if (!displayCollection.length) {
-      //   return
-      // }
-      this.$emit('view', viewingIndexes)
-    },
-    setLayoutSize(layoutSize) {
-      this.layoutSize = layoutSize
-    },
-    setLayoutShift(size) {
-      this.layoutShift = size
-    },
     initScrollFacade() {
       this.setupScrollElement()
       const {
@@ -137,7 +124,7 @@ export default {
     initScrollHandlers() {
       const layoutHandler = new this.LayoutHandlerClass({
         scrollElement: this.scrollElement,
-        layoutElement: this.$refs.transmitter,
+        layoutElement: this.$el,
         setLayoutShift: this.setLayoutShift,
         setLayoutSize: this.setLayoutSize,
       })
@@ -148,6 +135,7 @@ export default {
       this.collectionHandler = new this.CollectionHandlerClass({
         layoutHandler,
       })
+      layoutHandler.registerCollectionHandler(this.collectionHandler)
       return {
         scrollHandler: this.scrollHandler,
         collectionHandler: this.collectionHandler,
@@ -161,6 +149,27 @@ export default {
           : document.querySelector(this.scrollSelector)
         : document.documentElement || document.body
     },
+    /*
+     *
+     *  Методы обеспечивающие взаимодействие с Vue
+     *
+     */
+    setDisplayCollection({ displayCollection, viewingIndexes }) {
+      console.log(
+        'VirtualScroll:setDisplayCollection displayCollection.length',
+        displayCollection.length
+      )
+      this.$set(this, 'displayCollection', displayCollection)
+      if (viewingIndexes) {
+        this.$emit('view', viewingIndexes)
+      }
+    },
+    setLayoutSize(layoutSize) {
+      this.layoutSize = layoutSize
+    },
+    setLayoutShift(size) {
+      this.layoutShift = size
+    },
   },
   render(h) {
     return h(
@@ -168,38 +177,26 @@ export default {
       {
         class: {
           'scroll-container': true,
+          ...Object.fromEntries(this.classes.map((i) => [i, true])),
         },
         style: {
+          boxSizing: 'border-box',
           [this.isHorizontal ? 'width' : 'height']: this.layoutSize
             ? `${this.layoutSize}px`
             : 'auto',
+          paddingTop: `${this.layoutShift}px`,
+          // transform: `matrix3d(1,0,0,0,0,1,0,0,0,0,1,0,0,${this.layoutShift},0,1)`,
+          // transform: `translateY(${this.layoutShift}px)`,
         },
       },
       [
-        h(
-          'div',
-          {
-            class: {
-              'scroll-container__transmitter': true,
-              ...Object.fromEntries(this.classes.map((i) => [i, true])),
-            },
-            style: {
-              transform: `translateY(${this.layoutShift}px)`,
-              // position: 'relative',
-              // top: `${this.layoutShift}px`,
-            },
-            ref: 'transmitter',
-          },
-          [
-            this.$scopedSlots.default &&
-              this.$scopedSlots.default({
-                displayCollectionPromises: this.isTable /* || notMeasuring */
-                  ? this.displayCollectionPromises
-                  : [],
-                displayCollection: this.displayCollection,
-              }),
-          ]
-        ),
+        this.$scopedSlots.default &&
+          this.$scopedSlots.default({
+            displayCollectionPromises: this.isTable /* || notMeasuring */
+              ? this.displayCollectionPromises
+              : [],
+            displayCollection: this.displayCollection,
+          }),
       ]
     )
   },
