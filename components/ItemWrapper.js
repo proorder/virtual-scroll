@@ -5,14 +5,7 @@ export default {
       default: 'div',
     },
     uniqKey: {
-      type: String,
-    },
-    component: {
-      type: [Object, Function],
-    },
-    extraProps: {
-      type: Object,
-      default: () => ({}),
+      type: [String, Number],
     },
     isHorizontal: {
       type: Boolean,
@@ -34,20 +27,27 @@ export default {
       this.resizeObserver.observe(this.$el)
     }
   },
-  render(h) {
-    return h(
-      this.tag,
-      {
-        key: this.uniqKey,
-      },
-      [
-        h(this.component, {
-          props: {
-            ...this.extraProps,
-          },
-          scopedSlots: this.$scopedSlots,
-        }),
-      ]
-    )
+  beforeDestroy() {
+    if (this.resizeObserver) {
+      this.resizeObserver.disconnect()
+      this.resizeObserver = null
+    }
+  },
+  render() {
+    return (this.$scopedSlots.default && this.$scopedSlots.default()) || null
+    // return h(
+    //   this.tag,
+    //   {
+    //     key: this.uniqKey,
+    //   },
+    //   [
+    //     h(this.component, {
+    //       props: {
+    //         ...this.extraProps,
+    //       },
+    //       scopedSlots: this.$scopedSlots,
+    //     }),
+    //   ]
+    // )
   },
 }
