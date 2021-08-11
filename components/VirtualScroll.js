@@ -1,5 +1,7 @@
+import debounce from 'lodash.debounce'
 import deepEqual from 'fast-deep-equal'
 import ItemWrapper from './ItemWrapper'
+import { getScrollElement } from './helpers/getScrollElement'
 
 const ITEM_UNIQ_KEY = 'uniqKey'
 
@@ -28,7 +30,7 @@ export default {
     },
     index: {
       type: Number,
-      default: 0,
+      default: 200,
     },
     rootTag: {
       type: String,
@@ -42,9 +44,14 @@ export default {
       type: [String, Function],
       default: 'index',
     },
+    scrollSelector: {
+      type: [String, Object],
+      default: null,
+    },
   },
   data() {
-    this.localIndex = this.index
+    this.startIndex = this.index
+    this.multipleIndex = this.index
     this.firstOccur = true
     this.fillingCollectionResolver = null
     this.sizes = {}
@@ -52,9 +59,15 @@ export default {
     this.averageItemSize = null
     this.layoutShift = 0
     this.displayedElsCount = null
+    this.oneScreenElsCount = 0
+    this.waitShift = false
+    this.firstHalfSize = null
+    this.scrollElement = null
+    this.scrollPosition = null
     return {
       filteredCollection: [],
       layoutSize: 0,
+      layoutShift: 0,
     }
   },
   watch: {
@@ -73,7 +86,125 @@ export default {
       },
     },
   },
+  mounted() {
+    this.setupScrollElement()
+    this.scrollElement.addEventListener('scroll', this.onScroll, {
+      passive: false,
+    })
+  },
+  beforeDestroy() {
+    this.scrollElement.removeEventListener('scroll', this.onScroll)
+  },
   methods: {
+    onScroll: debounce(function () {
+      const delta = this.getScroll() - this.scrollPosition
+      if (delta === 0) {
+        return
+      }
+      this.waitShift = false
+      if (delta < 0 && this.checkOutBackMove(delta)) {
+        this.moveBack(delta)
+      } else if (delta > 0 && this.checkOutFrontMove(delta)) {
+        this.moveFront(delta)
+      }
+    }, 30),
+    checkOutBackMove(delta) {
+      const accumulator = []
+      for (
+        let i = this.startIndex + this.displayedElsCount - 1;
+        i > this.startIndex + this.displayedElsCount - 1 - this.grid;
+        i--
+      ) {
+        if (!this.sizes[i]) {
+          continue
+        }
+        accumulator.push(this.sizes[i])
+      }
+      return Math.max(...accumulator) + this.gap < Math.abs(delta)
+    },
+    checkOutFrontMove(delta) {
+      const accumulator = []
+      for (let i = this.startIndex; i < this.startIndex + this.grid; i++) {
+        if (!this.sizes[i]) {
+          continue
+        }
+        accumulator.push(this.sizes[i])
+      }
+      return Math.max(...accumulator) + this.gap < delta
+    },
+    moveBack(delta) {
+      this.setScroll()
+      let shift = Math.abs(delta)
+      let a = 0
+      while (true) {
+        const accumulator = []
+        for (
+          let i = this.startIndex + this.displayedElsCount - 1 - this.grid * a;
+          i >
+          this.startIndex +
+            this.displayedElsCount -
+            1 -
+            this.grid -
+            this.grid * a;
+          i--
+        ) {
+          if (!this.sizes[i]) {
+            continue
+          }
+          accumulator.push(this.sizes[i])
+        }
+        if (!accumulator.length) {
+          break
+        }
+        const rowSize = Math.max(...accumulator) + this.gap
+        if (rowSize < shift) {
+          shift -= rowSize
+          a += 1
+        } else {
+          // TODO: Set size equal averageRowSize
+          break
+        }
+      }
+      this.scrollPosition += shift
+      this.startIndex -= a * this.grid
+      this.formCollection().then(() => {
+        this.layoutShift -= Math.abs(delta) - shift
+      })
+    },
+    moveFront(delta) {
+      this.setScroll()
+      let shift = delta
+      let a = 0
+      while (true) {
+        const accumulator = []
+        for (
+          let i = this.startIndex + this.grid * a;
+          i < this.startIndex + this.grid + this.grid * a;
+          i++
+        ) {
+          if (!this.sizes[i]) {
+            continue
+          }
+          accumulator.push(this.sizes[i])
+        }
+        if (!accumulator.length) {
+          // TODO: Set size equal averageRowSize
+          break
+        }
+        const rowSize = Math.max(...accumulator) + this.gap
+        if (rowSize < shift) {
+          shift -= rowSize
+          a += 1
+        } else {
+          break
+        }
+      }
+      this.scrollPosition -= shift
+      this.startIndex += a * this.grid
+      this.formCollection().then(() => {
+        this.layoutShift += delta - shift
+      })
+    },
     async formCollection() {
       const [start, end] = this.getRange()
       this.$emit('view', [start, end])
@@ -102,24 +233,92 @@ export default {
     },
     registerSize(uniqKey, size) {
       this.sizes[uniqKey] = size
-      if (this.checkSizes() && this.firstOccur) {
+      if (!this.checkSizes()) {
+        return
+      }
+      if (this.firstOccur) {
         this.firstOccur = false
         this.calculateLayoutSize()
+      }
+      if (this.waitShift) {
+        this.calculateHalfSize()
+        this.shiftLayout()
       }
     },
     checkSizes() {
       return !this.filteredCollection.find((i) => !this.sizes[i[ITEM_UNIQ_KEY]])
     },
+    getScreenSize() {
+      return this.$el.parentNode.offsetHeight
+    },
+    getScroll() {
+      return getScrollElement(this.scrollElement).scrollTop
+    },
+    setScroll(scroll = null) {
+      if (scroll === null) {
+        this.scrollPosition = getScrollElement(this.scrollElement).scrollTop
+        return
+      }
+      this.scrollPosition = scroll
+      getScrollElement(this.scrollElement).scrollTop = scroll
+    },
+    setupScrollElement() {
+      this.scrollElement = this.scrollSelector
+        ? this.scrollSelector === 'document'
+          ? window
+          : document.querySelector(this.scrollSelector)
+        : document.documentElement || document.body
+    },
+    calculateHalfSize() {
+      const gridAccumulator = []
+      for (let i = this.startIndex; i < this.multipleIndex; i++) {
+        const rowIndex = Math.ceil(i / this.grid)
+        if (!this.sizes[i]) {
+          continue
+        }
+        if (!gridAccumulator[rowIndex]) {
+          gridAccumulator[rowIndex] = []
+        }
+        gridAccumulator[rowIndex].push(this.sizes[i])
+      }
+      this.firstHalfSize = gridAccumulator
+        .map((s) => Math.max(...s))
+        .reduce((acc, i) => acc + i + (acc !== 0 ? this.gap : 0), 0)
+    },
+    shiftLayout() {
+      const { shift, scroll } = this.calculateOffsetByIndex()
+      this.layoutShift = shift
+      if (this.grid > 1) {
+        this.setScroll(scroll)
+      } else {
+        requestAnimationFrame(() => {
+          this.setScroll(scroll)
+        })
+      }
+    },
+    calculateOffsetByIndex() {
+      const rowCount = (this.multipleIndex + 1) / this.grid
+      const scroll = rowCount * (this.averageItemSize + this.gap)
+
+      return {
+        shift: scroll - this.firstHalfSize,
+        scroll,
+      }
+    },
     calculateLayoutSize() {
       const viewSize = this.calculateViewSize()
       this.averageItemSize =
         viewSize / (this.filteredCollection.length / this.grid)
-      const oneScreenElsCount =
-        this.$el.parentNode.offsetHeight / this.averageItemSize
-      this.displayedElsCount = oneScreenElsCount * 2 * this.grid
+      this.oneScreenElsCount =
+        Math.ceil(this.getScreenSize() / this.averageItemSize) * this.grid
       this.layoutSize = Math.ceil(this.total / this.grid) * this.averageItemSize
-      this.localIndex =
+      this.multipleIndex =
         (Math.ceil((this.index + 1) / this.grid) - 1) * this.grid
+      this.startIndex = this.multipleIndex - this.calculateHalfScreenElsCount()
+      this.displayedElsCount =
+        this.oneScreenElsCount + this.halfScreenElsCount * 2
+      this.waitShift = true
+      this.formCollection()
     },
     calculateViewSize() {
       if (!this.grid) {
@@ -149,11 +348,18 @@ export default {
         0
       )
     },
+    calculateHalfScreenElsCount() {
+      this.halfScreenElsCount =
+        Math.floor(
+          this.getScreenSize() / (this.averageItemSize + this.gap) / 2
+        ) * this.grid
+      return this.halfScreenElsCount
+    },
     getRange() {
       if (this.firstOccur) {
         return [this.index, this.index + this.min]
       }
-      return [this.localIndex, this.localIndex + this.displayedElsCount]
+      return [this.startIndex, this.startIndex + this.displayedElsCount]
     },
     async getFilteredCollection([start, end]) {
       let collection = this.collection.filter(
@@ -173,7 +379,7 @@ export default {
           typeof this.indexKey === 'function'
             ? this.indexKey(item)
             : item[this.indexKey]
-        if (uniqKey >= start && uniqKey <= end) {
+        if (uniqKey >= start && uniqKey < end) {
           item[ITEM_UNIQ_KEY] = uniqKey
           return true
         }
