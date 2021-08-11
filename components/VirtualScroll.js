@@ -60,7 +60,7 @@ export default {
     this.layoutShift = 0
     this.displayedElsCount = null
     this.oneScreenElsCount = 0
-    this.waitShift = false
+    this.waitShiftPromiseResolver = false
     this.firstHalfSize = null
     this.scrollElement = null
     this.scrollPosition = null
@@ -101,7 +101,6 @@ export default {
       if (delta === 0) {
         return
       }
-      this.waitShift = false
       if (delta < 0 && this.checkOutBackMove(delta)) {
         this.moveBack(delta)
       } else if (delta > 0 && this.checkOutFrontMove(delta)) {
@@ -167,9 +166,17 @@ export default {
       }
       this.scrollPosition += shift
       this.startIndex -= a * this.grid
-      this.formCollection().then(() => {
-        this.layoutShift -= Math.abs(delta) - shift
+      new Promise((resolve) => {
+        this.waitShiftPromiseResolver = resolve
+      }).then(() => {
+        let topShift = 0
+        for (let i = 1; i < a + 1; i++) {
+          topShift += this.getSizesRow(i) + this.gap
+        }
+        console.log(topShift)
+        this.layoutShift -= topShift
       })
+      this.formCollection()
     },
     moveFront(delta) {
       this.setScroll()
@@ -204,6 +211,20 @@ export default {
       this.formCollection().then(() => {
         this.layoutShift += delta - shift
       })
+    },
+    getSizesRow(row) {
+      const accumulator = []
+      for (
+        let i = this.startIndex + this.grid * row;
+        i < this.startIndex + this.grid * row + this.grid;
+        i++
+      ) {
+        if (!this.sizes[i]) {
+          continue
+        }
+        accumulator.push(this.sizes[i])
+      }
+      return Math.max(...accumulator)
     },
     async formCollection() {
       const [start, end] = this.getRange()
@@ -240,9 +261,9 @@ export default {
         this.firstOccur = false
         this.calculateLayoutSize()
       }
-      if (this.waitShift) {
-        this.calculateHalfSize()
-        this.shiftLayout()
+      if (this.waitShiftPromiseResolver) {
+        this.waitShiftPromiseResolver()
+        this.waitShiftPromiseResolver = null
       }
     },
     checkSizes() {
@@ -317,7 +338,12 @@ export default {
       this.startIndex = this.multipleIndex - this.calculateHalfScreenElsCount()
       this.displayedElsCount =
         this.oneScreenElsCount + this.halfScreenElsCount * 2
-      this.waitShift = true
+      new Promise((resolve) => {
+        this.waitShiftPromiseResolver = resolve
+      }).then(() => {
+        this.calculateHalfSize()
+        this.shiftLayout()
+      })
       this.formCollection()
     },
     calculateViewSize() {
