@@ -5,6 +5,8 @@ import { getScrollElement } from './helpers/getScrollElement'
 
 const ITEM_UNIQ_KEY = 'uniqKey'
 
+const LARGE_SCROLL = 600
+
 export default {
   name: 'VirtualScroll',
   props: {
@@ -60,7 +62,7 @@ export default {
     this.layoutShift = 0
     this.displayedElsCount = null
     this.oneScreenElsCount = 0
-    this.waitShiftPromiseResolver = false
+    this.waitShiftResolver = false
     this.firstHalfSize = null
     this.scrollElement = null
     this.scrollPosition = null
@@ -101,7 +103,9 @@ export default {
       if (delta === 0) {
         return
       }
-      if (delta < 0 && this.checkOutBackMove(delta)) {
+      if (Math.abs(delta) > LARGE_SCROLL) {
+        this.doJump(delta)
+      } else if (delta < 0 && this.checkOutBackMove(delta)) {
         this.moveBack(delta)
       } else if (delta > 0 && this.checkOutFrontMove(delta)) {
         this.moveFront(delta)
@@ -167,13 +171,12 @@ export default {
       this.scrollPosition += shift
       this.startIndex -= a * this.grid
       new Promise((resolve) => {
-        this.waitShiftPromiseResolver = resolve
+        this.waitShiftResolver = resolve
       }).then(() => {
         let topShift = 0
         for (let i = 1; i < a + 1; i++) {
           topShift += this.getSizesRow(i) + this.gap
         }
-        console.log(topShift)
         this.layoutShift -= topShift
       })
       this.formCollection()
@@ -212,6 +215,7 @@ export default {
         this.layoutShift += delta - shift
       })
     },
+    doJump(delta) {},
     getSizesRow(row) {
       const accumulator = []
       for (
@@ -260,10 +264,11 @@ export default {
       if (this.firstOccur) {
         this.firstOccur = false
         this.calculateLayoutSize()
+        this.renderFromIndex(this.index)
       }
-      if (this.waitShiftPromiseResolver) {
-        this.waitShiftPromiseResolver()
-        this.waitShiftPromiseResolver = null
+      if (this.waitShiftResolver) {
+        this.waitShiftResolver()
+        this.waitShiftResolver = null
       }
     },
     checkSizes() {
@@ -307,6 +312,7 @@ export default {
         .reduce((acc, i) => acc + i + (acc !== 0 ? this.gap : 0), 0)
     },
     shiftLayout() {
+      console.log('Ебаться')
       const { shift, scroll } = this.calculateOffsetByIndex()
       this.layoutShift = shift
       if (this.grid > 1) {
@@ -333,18 +339,6 @@ export default {
       this.oneScreenElsCount =
         Math.ceil(this.getScreenSize() / this.averageItemSize) * this.grid
       this.layoutSize = Math.ceil(this.total / this.grid) * this.averageItemSize
-      this.multipleIndex =
-        (Math.ceil((this.index + 1) / this.grid) - 1) * this.grid
-      this.startIndex = this.multipleIndex - this.calculateHalfScreenElsCount()
-      this.displayedElsCount =
-        this.oneScreenElsCount + this.halfScreenElsCount * 2
-      new Promise((resolve) => {
-        this.waitShiftPromiseResolver = resolve
-      }).then(() => {
-        this.calculateHalfSize()
-        this.shiftLayout()
-      })
-      this.formCollection()
     },
     calculateViewSize() {
       if (!this.grid) {
@@ -374,11 +368,29 @@ export default {
         0
       )
     },
-    calculateHalfScreenElsCount() {
-      this.halfScreenElsCount =
-        Math.floor(
-          this.getScreenSize() / (this.averageItemSize + this.gap) / 2
-        ) * this.grid
+    renderFromIndex(index) {
+      this.multipleIndex = (Math.ceil((index + 1) / this.grid) - 1) * this.grid
+      this.startIndex = this.multipleIndex - this.getHalfScreenElsCount()
+      if (!this.displayedElsCount) {
+        this.displayedElsCount =
+          this.oneScreenElsCount + this.halfScreenElsCount * 2
+      }
+      this.formCollection().then(() => {
+        new Promise((resolve) => {
+          this.waitShiftResolver = resolve
+        }).then(() => {
+          this.calculateHalfSize()
+          this.shiftLayout()
+        })
+      })
+    },
+    getHalfScreenElsCount() {
+      if (!this.halfScreenElsCount) {
+        this.halfScreenElsCount =
+          Math.floor(
+            this.getScreenSize() / (this.averageItemSize + this.gap) / 2
+          ) * this.grid
+      }
       return this.halfScreenElsCount
     },
     getRange() {
