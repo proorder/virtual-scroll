@@ -136,6 +136,7 @@ export default {
       return Math.max(...accumulator) + this.gap < delta
     },
     moveBack(delta) {
+      console.log('Бэк', delta)
       this.setScroll()
       let shift = Math.abs(delta)
       let a = 0
@@ -168,20 +169,33 @@ export default {
           break
         }
       }
+      console.log('Shift', shift)
       this.scrollPosition += shift
       this.startIndex -= a * this.grid
-      new Promise((resolve) => {
-        this.waitShiftResolver = resolve
-      }).then(() => {
-        let topShift = 0
-        for (let i = 1; i < a + 1; i++) {
-          topShift += this.getSizesRow(i) + this.gap
-        }
-        this.layoutShift -= topShift
+      const containerSize = this.$refs.transmitter.offsetHeight
+      this.formCollection().then(() => {
+        this.layoutShift -=
+          Math.abs(delta) -
+          shift +
+          (this.$refs.transmitter.offsetHeight - containerSize)
+        // requestAnimationFrame(() => {
+        //   let topShift = 0
+        //   for (let i = 1; i < a + 1; i++) {
+        //     topShift += this.getSizesRow(i) + this.gap
+        //   }
+        //   console.log(topShift, Math.abs(delta) - shift)
+        //   this.layoutShift -= Math.abs(delta) - shift + containerSize - this.$refs.transmitter.offsetHeight
+        // })
+        // new Promise((resolve) => {
+        //   this.waitShiftResolver = resolve
+        // }).then(() => {
+        // })
+        //
+        // this.layoutShift -= Math.abs(delta) - shift
       })
-      this.formCollection()
     },
     moveFront(delta) {
+      console.log('Фронт', delta)
       this.setScroll()
       let shift = delta
       let a = 0
@@ -209,6 +223,8 @@ export default {
           break
         }
       }
+      console.log('Shift', shift)
+      // console.log(this.scrollPosition, this.scrollPosition - shift)
       this.scrollPosition -= shift
       this.startIndex += a * this.grid
       this.formCollection().then(() => {
@@ -229,6 +245,9 @@ export default {
         accumulator.push(this.sizes[i])
       }
       return Math.max(...accumulator)
+      // return accumulator.length
+      //   ? Math.max(...accumulator)
+      //   : this.averageItemSize
     },
     async formCollection() {
       const [start, end] = this.getRange()
@@ -312,7 +331,6 @@ export default {
         .reduce((acc, i) => acc + i + (acc !== 0 ? this.gap : 0), 0)
     },
     shiftLayout() {
-      console.log('Ебаться')
       const { shift, scroll } = this.calculateOffsetByIndex()
       this.layoutShift = shift
       if (this.grid > 1) {
