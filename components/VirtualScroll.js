@@ -103,12 +103,13 @@ export default {
       if (delta === 0) {
         return
       }
+      console.log('scroll', delta)
       if (Math.abs(delta) > LARGE_SCROLL) {
-        this.doJump(delta)
+        setTimeout(this.doJump.bind(this, delta), 0)
       } else if (delta < 0 && this.checkOutBackMove(delta)) {
-        this.moveBack(delta)
+        setTimeout(this.moveBack.bind(this, delta), 0)
       } else if (delta > 0 && this.checkOutFrontMove(delta)) {
-        this.moveFront(delta)
+        setTimeout(this.moveFront.bind(this, delta), 0)
       }
     }, 30),
     checkOutBackMove(delta) {
@@ -136,7 +137,7 @@ export default {
       return Math.max(...accumulator) + this.gap < delta
     },
     moveBack(delta) {
-      console.log('Бэк', delta)
+      console.log('Бэк', delta, this.getScroll())
       this.setScroll()
       let shift = Math.abs(delta)
       let a = 0
@@ -169,33 +170,24 @@ export default {
           break
         }
       }
-      console.log('Shift', shift)
       this.scrollPosition += shift
       this.startIndex -= a * this.grid
+      // eslint-disable-next-line
       const containerSize = this.$refs.transmitter.offsetHeight
-      this.formCollection().then(() => {
-        this.layoutShift -=
-          Math.abs(delta) -
-          shift +
-          (this.$refs.transmitter.offsetHeight - containerSize)
-        // requestAnimationFrame(() => {
-        //   let topShift = 0
-        //   for (let i = 1; i < a + 1; i++) {
-        //     topShift += this.getSizesRow(i) + this.gap
-        //   }
-        //   console.log(topShift, Math.abs(delta) - shift)
-        //   this.layoutShift -= Math.abs(delta) - shift + containerSize - this.$refs.transmitter.offsetHeight
-        // })
-        // new Promise((resolve) => {
-        //   this.waitShiftResolver = resolve
-        // }).then(() => {
-        // })
-        //
-        // this.layoutShift -= Math.abs(delta) - shift
-      })
+      setTimeout(() => {
+        this.formCollection().then(() => {
+          const firedInAnimation = () => {
+            this.layoutShift -=
+              Math.abs(delta) -
+              shift +
+              (this.$refs.transmitter.offsetHeight - containerSize)
+          }
+          requestAnimationFrame(firedInAnimation)
+        })
+      }, 0)
     },
     moveFront(delta) {
-      console.log('Фронт', delta)
+      console.log('Фронт', delta, this.getScroll())
       this.setScroll()
       let shift = delta
       let a = 0
@@ -231,7 +223,13 @@ export default {
         this.layoutShift += delta - shift
       })
     },
-    doJump(delta) {},
+    doJump() {
+      const index = this.getIndexByOffset()
+      this.renderFromIndex(index)
+    },
+    getIndexByOffset() {
+      return Math.floor(this.getScroll() / this.averageItemSize) * this.grid
+    },
     getSizesRow(row) {
       const accumulator = []
       for (

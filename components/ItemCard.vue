@@ -1,9 +1,10 @@
 <template lang="pug">
-  .item-card(:style="{ padding: `${identify ? 10 : item.random}px`, height: identify ? '110px' : 'auto' }")
+  .item-card(:style="{ padding: `${identify ? 10 : item.random}px`, height: identify ? 'auto' : 'auto' }")
     .item-card__title
       b {{ currentItem.label }}
     .item-card__content
-      | {{ currentItem.label }}
+      div(v-for="i in text", :key="i")
+        | {{ i }}
 </template>
 
 <script>
@@ -17,12 +18,20 @@ export default {
   },
   data() {
     return {
-      identify: false,
+      identify: true,
       currentItem: {
         title: '',
         label: '',
       },
     }
+  },
+  computed: {
+    text() {
+      const iter = Math.ceil(this.currentItem.label.length / 3)
+      return Array.from({ length: iter }, (_, i) => i).map((i) =>
+        this.currentItem.label.slice(i * 3, i * 3 + 3)
+      )
+    },
   },
   watch: {
     item: {
@@ -62,4 +71,5 @@ export default {
     display flex
     justify-content center
     align-items center
+    flex-direction column
 </style>
