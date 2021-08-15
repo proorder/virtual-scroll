@@ -32,7 +32,7 @@ export default {
     },
     index: {
       type: Number,
-      default: 200,
+      default: 100,
     },
     rootTag: {
       type: String,
@@ -175,14 +175,14 @@ export default {
       // eslint-disable-next-line
       const containerSize = this.$refs.transmitter.offsetHeight
       setTimeout(() => {
-        this.formCollection().then(() => {
-          const firedInAnimation = () => {
-            this.layoutShift -=
-              Math.abs(delta) -
-              shift +
-              (this.$refs.transmitter.offsetHeight - containerSize)
-          }
-          requestAnimationFrame(firedInAnimation)
+        this.formCollection(a * this.grid).then(() => {
+          const layoutShift =
+            Math.abs(delta) -
+            shift +
+            (this.$refs.transmitter.offsetHeight - containerSize)
+          this.formCollection().then(() => {
+            this.layoutShift -= layoutShift
+          })
         })
       }, 0)
     },
@@ -247,11 +247,28 @@ export default {
       //   ? Math.max(...accumulator)
       //   : this.averageItemSize
     },
-    async formCollection() {
+    async formCollection(offset = null) {
       const [start, end] = this.getRange()
       this.$emit('view', [start, end])
 
-      this.filteredCollection = await this.getFilteredCollection([start, end])
+      if (!offset) {
+        this.filteredCollection = await this.getFilteredCollection([start, end])
+        return
+      }
+      let collection = await this.getFilteredCollection([start, end + offset])
+      console.log(collection.length)
+      console.log(
+        end,
+        start,
+        offset,
+        collection.slice(offset, end - start - offset),
+        collection.slice(0, offset)
+      )
+      collection = [
+        ...collection.slice(offset, end - start),
+        ...collection.slice(0, offset),
+      ]
+      this.filteredCollection = collection
     },
     getRenderSlots(h) {
       return this.filteredCollection.map((item) =>
@@ -395,6 +412,7 @@ export default {
         new Promise((resolve) => {
           this.waitShiftResolver = resolve
         }).then(() => {
+          // TODO: Проверить причины
           this.calculateHalfSize()
           this.shiftLayout()
         })
