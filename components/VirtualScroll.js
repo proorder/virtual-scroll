@@ -103,7 +103,7 @@ export default {
       if (delta === 0) {
         return
       }
-      console.log('Scroll Delta', this.scrollPosition)
+      console.log('Scroll', this.scrollPosition)
       if (Math.abs(delta) > LARGE_SCROLL) {
         setTimeout(this.doJump.bind(this, delta), 0)
       } else if (delta < 0 && this.checkOutBackMove(delta)) {
@@ -215,7 +215,7 @@ export default {
       let a = 0
       if (this.startIndex === 0) {
         this.calculateHalfSize()
-        if (this.firstHalfSize > this.scrollPosition) {
+        if (this.firstHalfSize - this.averageItemSize > this.scrollPosition) {
           return
         }
       }
@@ -252,8 +252,7 @@ export default {
     },
     doJump() {
       console.log('Jump')
-      const index = this.getIndexByOffset()
-      this.renderFromIndex(index)
+      this.renderFromOffset()
     },
     getIndexByOffset() {
       return Math.floor(this.getScroll() / this.averageItemSize) * this.grid
@@ -320,7 +319,6 @@ export default {
         this.firstOccur = false
         this.calculateLayoutSize()
         this.renderFromIndex(this.index)
-        // Установить позицию скролла
       }
       if (this.waitShiftResolver) {
         this.waitShiftResolver()
@@ -353,7 +351,6 @@ export default {
     },
     calculateHalfSize() {
       if (this.lastCalculatedStartIndex === this.startIndex) {
-        console.log('Куда пошел')
         return
       }
       const gridAccumulator = []
@@ -384,6 +381,12 @@ export default {
       }
     },
     calculateOffsetByIndex() {
+      if (this.startIndex === 0) {
+        return {
+          shift: 0,
+          scroll: 0,
+        }
+      }
       const rowCount = (this.multipleIndex + 1) / this.grid
       const scroll = rowCount * (this.averageItemSize + this.gap)
 
@@ -428,6 +431,15 @@ export default {
         0
       )
     },
+    renderFromOffset() {
+      const offset = this.getScroll()
+      this.multipleIndex =
+        Math.floor(offset / (this.averageItemSize + this.gap)) * this.grid
+      this.startIndex = this.multipleIndex - this.getHalfScreenElsCount()
+      this.formCollection().then(() => {
+        this.layoutShift = offset - this.firstHalfSize
+      })
+    },
     renderFromIndex(index) {
       this.multipleIndex = (Math.ceil((index + 1) / this.grid) - 1) * this.grid
       this.startIndex = this.multipleIndex - this.getHalfScreenElsCount()
@@ -448,7 +460,6 @@ export default {
           new Promise((resolve) => {
             this.waitShiftResolver = resolve
           }).then(() => {
-            // TODO: Проверить причины прыжка
             this.calculateHalfSize()
             this.shiftLayout()
           })
