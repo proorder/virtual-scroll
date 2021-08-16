@@ -103,7 +103,7 @@ export default {
       if (delta === 0) {
         return
       }
-      console.log('scroll', delta)
+      console.log('Scroll Delta', this.scrollPosition)
       if (Math.abs(delta) > LARGE_SCROLL) {
         setTimeout(this.doJump.bind(this, delta), 0)
       } else if (delta < 0 && this.checkOutBackMove(delta)) {
@@ -137,8 +137,10 @@ export default {
       return Math.max(...accumulator) + this.gap < delta
     },
     moveBack(delta) {
-      console.log('Бэк', delta, this.getScroll())
       this.setScroll()
+      if (this.startIndex === 0) {
+        return
+      }
       let shift = Math.abs(delta)
       let a = 0
       while (true) {
@@ -171,26 +173,52 @@ export default {
         }
       }
       this.scrollPosition += shift
-      this.startIndex -= a * this.grid
+      let indexOffset = a * this.grid
+      if (this.startIndex - indexOffset < 0) {
+        indexOffset = indexOffset + (this.startIndex - indexOffset)
+      }
+      this.startIndex -= indexOffset
+      this.multipleIndex -= indexOffset
       // eslint-disable-next-line
       const containerSize = this.$refs.transmitter.offsetHeight
       setTimeout(() => {
-        this.formCollection(a * this.grid).then(() => {
+        this.formCollection(indexOffset).then(() => {
           const layoutShift =
             Math.abs(delta) -
             shift +
             (this.$refs.transmitter.offsetHeight - containerSize)
           this.formCollection().then(() => {
+            const nextShift = this.layoutShift - layoutShift
+            if (nextShift < 0 || (nextShift > 0 && this.startIndex === 0)) {
+              const layoutShift = this.layoutShift
+              this.layoutShift = 0
+              // TODO: Разгрезти и понять в чем причина
+              console.log(
+                this.layoutShift,
+                nextShift,
+                this.getScroll(),
+                this.getScroll() - this.layoutShift
+              )
+              requestAnimationFrame(() => {
+                this.setScroll(this.getScroll() - layoutShift)
+              })
+              return
+            }
             this.layoutShift -= layoutShift
           })
         })
       }, 0)
     },
     moveFront(delta) {
-      console.log('Фронт', delta, this.getScroll())
       this.setScroll()
       let shift = delta
       let a = 0
+      if (this.startIndex === 0) {
+        this.calculateHalfSize()
+        if (this.firstHalfSize > this.scrollPosition) {
+          return
+        }
+      }
       while (true) {
         const accumulator = []
         for (
@@ -215,15 +243,15 @@ export default {
           break
         }
       }
-      console.log('Shift', shift)
-      // console.log(this.scrollPosition, this.scrollPosition - shift)
       this.scrollPosition -= shift
       this.startIndex += a * this.grid
+      this.multipleIndex += a * this.grid
       this.formCollection().then(() => {
         this.layoutShift += delta - shift
       })
     },
     doJump() {
+      console.log('Jump')
       const index = this.getIndexByOffset()
       this.renderFromIndex(index)
     },
@@ -249,6 +277,7 @@ export default {
     },
     async formCollection(offset = null) {
       const [start, end] = this.getRange()
+      console.log('ViewIndex', start)
       this.$emit('view', [start, end])
 
       if (!offset) {
@@ -256,14 +285,6 @@ export default {
         return
       }
       let collection = await this.getFilteredCollection([start, end + offset])
-      console.log(collection.length)
-      console.log(
-        end,
-        start,
-        offset,
-        collection.slice(offset, end - start - offset),
-        collection.slice(0, offset)
-      )
       collection = [
         ...collection.slice(offset, end - start),
         ...collection.slice(0, offset),
@@ -299,6 +320,7 @@ export default {
         this.firstOccur = false
         this.calculateLayoutSize()
         this.renderFromIndex(this.index)
+        // Установить позицию скролла
       }
       if (this.waitShiftResolver) {
         this.waitShiftResolver()
@@ -330,6 +352,10 @@ export default {
         : document.documentElement || document.body
     },
     calculateHalfSize() {
+      if (this.lastCalculatedStartIndex === this.startIndex) {
+        console.log('Куда пошел')
+        return
+      }
       const gridAccumulator = []
       for (let i = this.startIndex; i < this.multipleIndex; i++) {
         const rowIndex = Math.ceil(i / this.grid)
@@ -341,18 +367,19 @@ export default {
         }
         gridAccumulator[rowIndex].push(this.sizes[i])
       }
+      this.lastCalculatedStartIndex = this.startIndex
       this.firstHalfSize = gridAccumulator
-        .map((s) => Math.max(...s))
+        .map((s) => Math.max.apply(null, s))
         .reduce((acc, i) => acc + i + (acc !== 0 ? this.gap : 0), 0)
     },
     shiftLayout() {
       const { shift, scroll } = this.calculateOffsetByIndex()
-      this.layoutShift = shift
+      this.layoutShift = Math.max(shift, 0)
       if (this.grid > 1) {
-        this.setScroll(scroll)
+        this.setScroll(scroll + (shift < 0 ? Math.abs(shift) : 0))
       } else {
         requestAnimationFrame(() => {
-          this.setScroll(scroll)
+          this.setScroll(scroll + (shift < 0 ? Math.abs(shift) : 0))
         })
       }
     },
@@ -404,19 +431,29 @@ export default {
     renderFromIndex(index) {
       this.multipleIndex = (Math.ceil((index + 1) / this.grid) - 1) * this.grid
       this.startIndex = this.multipleIndex - this.getHalfScreenElsCount()
+      if (this.startIndex < 0) {
+        this.startIndex = 0
+        this.multipleIndex = this.startIndex + this.getHalfScreenElsCount()
+      }
       if (!this.displayedElsCount) {
         this.displayedElsCount =
           this.oneScreenElsCount + this.halfScreenElsCount * 2
       }
-      this.formCollection().then(() => {
-        new Promise((resolve) => {
-          this.waitShiftResolver = resolve
-        }).then(() => {
-          // TODO: Проверить причины
-          this.calculateHalfSize()
-          this.shiftLayout()
+      if (this.startIndex + this.displayedElsCount > this.total) {
+        this.startIndex = this.total - this.displayedElsCount - 1
+        this.multipleIndex = this.startIndex + this.getHalfScreenElsCount()
+      }
+      setTimeout(() => {
+        this.formCollection().then(() => {
+          new Promise((resolve) => {
+            this.waitShiftResolver = resolve
+          }).then(() => {
+            // TODO: Проверить причины прыжка
+            this.calculateHalfSize()
+            this.shiftLayout()
+          })
         })
-      })
+      }, 0)
     },
     getHalfScreenElsCount() {
       if (!this.halfScreenElsCount) {
