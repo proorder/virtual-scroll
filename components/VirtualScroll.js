@@ -28,7 +28,7 @@ export default {
     },
     min: {
       type: Number,
-      default: 30,
+      default: 15,
     },
     index: {
       type: Number,
@@ -213,36 +213,31 @@ export default {
               }
               gridAccumulator[row].push(this.sizes[sizeKeys[i]])
             }
-            // eslint-disable-next-line
             const layoutShift = gridAccumulator.reduce((acc, c) => {
               acc += Math.max.apply(null, c) + this.gap
               return acc
             }, 0)
-            this.layoutShift -= layoutShift
-            this.formCollection()
-            // function checkWheather() {
-            //   console.log('checkWheather', this.$el.offsetHeight)
-            // }
-            // this.formCollection().then(checkWheather.bind(this))
-            // this.formCollection().then(() => {
-            //   const nextShift = this.layoutShift - layoutShift
-            //   if (nextShift < 0 || (nextShift > 0 && this.startIndex === 0)) {
-            //     const layoutShift = this.layoutShift
-            //     this.layoutShift = 0
-            //     // TODO: Разгрезти и понять в чем причина
-            //     console.log(
-            //       this.layoutShift,
-            //       nextShift,
-            //       this.getScroll(),
-            //       this.getScroll() - this.layoutShift
-            //     )
-            //     requestAnimationFrame(() => {
-            //       this.setScroll(this.getScroll() - layoutShift)
-            //     })
-            //     return
-            //   }
-            //   this.layoutShift -= layoutShift
-            // })
+            this.formCollection().then(() => {
+              // console.log(getComputedStyle(this.$el, 'padding'))
+              // console.log(this.getScroll())
+              const nextShift = this.layoutShift - layoutShift
+              if (nextShift < 0 || (nextShift > 0 && this.startIndex === 0)) {
+                const layoutShift = this.layoutShift
+                this.layoutShift = 0
+                // TODO: Разгрезти и понять в чем причина
+                console.log(
+                  this.layoutShift,
+                  nextShift,
+                  this.getScroll(),
+                  this.getScroll() - this.layoutShift
+                )
+                requestAnimationFrame(() => {
+                  this.setScroll(this.getScroll() - layoutShift)
+                })
+                return
+              }
+              this.layoutShift -= layoutShift
+            })
           }, 0)
         })
       }, 0)
@@ -253,11 +248,6 @@ export default {
       let a = 0
       if (this.startIndex === 0) {
         this.calculateHalfSize()
-        console.log(
-          this.firstHalfSize,
-          this.scrollPosition,
-          this.averageItemSize
-        )
         if (this.firstHalfSize > this.scrollPosition) {
           return
         }
@@ -278,7 +268,7 @@ export default {
           // TODO: Set size equal averageRowSize
           break
         }
-        const rowSize = Math.max(...accumulator) + this.gap
+        const rowSize = Math.max.apply(null, accumulator) + this.gap
         if (rowSize < shift) {
           shift -= rowSize
           a += 1
@@ -286,10 +276,21 @@ export default {
           break
         }
       }
-      this.scrollPosition -= shift
+      let layoutShiftToEnd = false
       this.startIndex += a * this.grid
-      this.multipleIndex += a * this.grid
+      // + this.displayedElsCount
+      if (this.startIndex + a * this.grid < this.total) {
+        this.scrollPosition -= shift
+        this.multipleIndex += a * this.grid
+      } else {
+        layoutShiftToEnd = true
+        this.startIndex = this.total - this.displayedElsCount - 1
+        this.multipleIndex = this.startIndex + this.getHalfScreenElsCount()
+      }
       this.formCollection().then(() => {
+        if (layoutShiftToEnd) {
+          this.layoutShift = this.layoutSize - this.$el.parentNode.offsetHeight
+        }
         this.layoutShift += delta - shift
       })
     },
@@ -320,12 +321,10 @@ export default {
     },
     async formCollection(offset = null) {
       const [start, end] = this.getRange()
-      console.log('ViewIndex', start)
       this.$emit('view', [start, end])
 
       if (!offset) {
         this.filteredCollection = await this.getFilteredCollection([start, end])
-        console.log('No cut', this.filteredCollection)
         return
       }
       let collection = await this.getFilteredCollection([start, end + offset])
@@ -338,7 +337,6 @@ export default {
         ),
       ].flat()
       this.filteredCollection = collection
-      console.log('Sliced', this.filteredCollection)
     },
     getRenderSlots(h) {
       return this.filteredCollection.map((item) =>
@@ -492,6 +490,7 @@ export default {
     },
     renderFromOffset() {
       const offset = this.getScroll()
+      console.log(this.layoutSize, offset, this.getScreenSize())
       if (this.layoutSize - offset === this.getScreenSize()) {
         this.startIndex = Math.max(this.total - this.displayedElsCount, 0)
         this.multipleIndex = this.startIndex + this.getHalfScreenElsCount()
