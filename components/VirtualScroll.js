@@ -218,8 +218,6 @@ export default {
               return acc
             }, 0)
             this.formCollection().then(() => {
-              // console.log(getComputedStyle(this.$el, 'padding'))
-              // console.log(this.getScroll())
               const nextShift = this.layoutShift - layoutShift
               if (nextShift < 0 || (nextShift > 0 && this.startIndex === 0)) {
                 const layoutShift = this.layoutShift
@@ -324,7 +322,13 @@ export default {
       this.$emit('view', [start, end])
 
       if (!offset) {
-        this.filteredCollection = await this.getFilteredCollection([start, end])
+        const collection = await this.getFilteredCollection([start, end])
+        collection.forEach((item) => {
+          if (item[ITEM_UNIQ_KEY].toString().slice(-2) === '_q') {
+            item[ITEM_UNIQ_KEY] = item[ITEM_UNIQ_KEY].toString().slice(0, -2)
+          }
+        })
+        this.filteredCollection = collection
         return
       }
       let collection = await this.getFilteredCollection([start, end + offset])
@@ -336,6 +340,9 @@ export default {
           end - start - 1 + (this.total % this.grid)
         ),
       ].flat()
+      collection.forEach((item) => {
+        item[ITEM_UNIQ_KEY] = `${item[ITEM_UNIQ_KEY]}_q`
+      })
       this.filteredCollection = collection
     },
     getRenderSlots(h) {

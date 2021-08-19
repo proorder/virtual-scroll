@@ -20,7 +20,9 @@ export default {
       this.resizeObserver = new ResizeObserver(() => {
         this.$emit(
           'resize',
-          this.uniqKey,
+          this.uniqKey.toString().slice(-2) === '_q'
+            ? this.uniqKey.toString().slice(0, -2)
+            : this.uniqKey,
           this.$el ? this.$el[this.shapeKey] : 0
         )
       })
