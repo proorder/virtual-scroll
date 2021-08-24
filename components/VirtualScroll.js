@@ -28,11 +28,11 @@ export default {
     },
     min: {
       type: Number,
-      default: 15,
+      default: 12,
     },
     index: {
       type: Number,
-      default: 100,
+      default: 0,
     },
     rootTag: {
       type: String,
@@ -121,6 +121,7 @@ export default {
         setTimeout(this.moveFront.bind(this, delta), 0)
       }
     }, 30),
+
     checkOutBackMove(delta) {
       const accumulator = []
       for (
@@ -135,6 +136,7 @@ export default {
       }
       return Math.max(...accumulator) + this.gap < Math.abs(delta)
     },
+
     checkOutFrontMove(delta) {
       const accumulator = []
       for (let i = this.startIndex; i < this.startIndex + this.grid; i++) {
@@ -145,7 +147,9 @@ export default {
       }
       return Math.max(...accumulator) + this.gap < delta
     },
+
     moveBack(delta) {
+      console.log('Мув бэк')
       this.setScroll()
       if (this.startIndex === 0) {
         return
@@ -240,7 +244,9 @@ export default {
         })
       }, 0)
     },
+
     moveFront(delta) {
+      console.log('Мув фронт')
       this.setScroll()
       let shift = delta
       let a = 0
@@ -292,14 +298,17 @@ export default {
         this.layoutShift += delta - shift
       })
     },
+
     doJump() {
       console.log('Jump')
       this.setScroll()
       this.renderFromOffset()
     },
+
     getIndexByOffset() {
       return Math.floor(this.getScroll() / this.averageItemSize) * this.grid
     },
+
     getSizesRow(row) {
       const accumulator = []
       for (
@@ -317,8 +326,10 @@ export default {
       //   ? Math.max(...accumulator)
       //   : this.averageItemSize
     },
+
     async formCollection(offset = null) {
       const [start, end] = this.getRange()
+      console.log('Start', start, this.startIndex)
       this.$emit('view', [start, end])
 
       if (!offset) {
@@ -345,6 +356,7 @@ export default {
       })
       this.filteredCollection = collection
     },
+
     getRenderSlots(h) {
       return this.filteredCollection.map((item) =>
         h(ItemWrapper, {
@@ -365,6 +377,7 @@ export default {
         })
       )
     },
+
     registerSize(uniqKey, size) {
       this.sizes[uniqKey] = size
       if (!this.checkSizes()) {
@@ -380,18 +393,22 @@ export default {
         this.waitShiftResolver = null
       }
     },
+
     checkSizes() {
       return !this.filteredCollection.find((i) => !this.sizes[i[ITEM_UNIQ_KEY]])
     },
+
     getScreenSize(update = false) {
       if (!this.screenSize || update) {
         this.screenSize = this.calculateScreenSize() // this.$el.parentNode.offsetHeight
       }
       return this.screenSize
     },
+
     getScroll() {
       return getScrollElement(this.scrollElement).scrollTop
     },
+
     setScroll(scroll = null) {
       if (scroll === null) {
         this.scrollPosition = getScrollElement(this.scrollElement).scrollTop
@@ -400,6 +417,7 @@ export default {
       this.scrollPosition = scroll
       getScrollElement(this.scrollElement).scrollTop = scroll
     },
+
     setupScrollElement() {
       this.scrollElement = this.scrollSelector
         ? this.scrollSelector === 'document'
@@ -407,6 +425,7 @@ export default {
           : document.querySelector(this.scrollSelector)
         : document.documentElement || document.body
     },
+
     calculateHalfSize() {
       if (
         this.lastCalculatedStartIndex === this.startIndex &&
@@ -432,6 +451,7 @@ export default {
         .map((s) => Math.max.apply(null, s))
         .reduce((acc, i) => acc + i + (acc !== 0 ? this.gap : 0), 0)
     },
+
     shiftLayout() {
       const { shift, scroll } = this.calculateOffsetByIndex()
       this.layoutShift = Math.max(shift, 0)
@@ -443,6 +463,7 @@ export default {
         })
       }
     },
+
     calculateOffsetByIndex() {
       if (this.startIndex === 0) {
         return {
@@ -458,6 +479,7 @@ export default {
         scroll,
       }
     },
+
     calculateLayoutSize() {
       const viewSize = this.calculateViewSize()
       this.averageItemSize =
@@ -467,6 +489,7 @@ export default {
         (this.total % this.grid)
       this.layoutSize = Math.ceil(this.total / this.grid) * this.averageItemSize
     },
+
     calculateViewSize() {
       if (!this.grid) {
         return this.filteredCollection.reduce((acc, i) => {
@@ -495,6 +518,7 @@ export default {
         0
       )
     },
+
     renderFromOffset() {
       const offset = this.getScroll()
       console.log(this.layoutSize, offset, this.getScreenSize())
@@ -520,6 +544,7 @@ export default {
           this.startIndex === 0 ? 0 : offset - this.firstHalfSize
       })
     },
+
     renderFromIndex(index) {
       this.multipleIndex = (Math.ceil((index + 1) / this.grid) - 1) * this.grid
       this.startIndex = this.multipleIndex - this.getHalfScreenElsCount()
@@ -532,8 +557,12 @@ export default {
           this.oneScreenElsCount + this.halfScreenElsCount * 2
       }
       if (this.startIndex + this.displayedElsCount > this.total) {
-        this.startIndex = this.total - this.displayedElsCount - 1
+        this.startIndex = Math.max(this.total - this.displayedElsCount - 1, 0)
         this.multipleIndex = this.startIndex + this.getHalfScreenElsCount()
+        this.displayedElsCount = Math.min(
+          this.total - this.startIndex,
+          this.displayedElsCount
+        )
       }
       setTimeout(() => {
         this.formCollection().then(() => {
@@ -546,6 +575,7 @@ export default {
         })
       }, 0)
     },
+
     getHalfScreenElsCount() {
       if (!this.halfScreenElsCount) {
         this.halfScreenElsCount =
@@ -555,12 +585,14 @@ export default {
       }
       return this.halfScreenElsCount
     },
+
     getRange() {
       if (this.firstOccur) {
         return [this.index, this.index + this.min]
       }
       return [this.startIndex, this.startIndex + this.displayedElsCount]
     },
+
     async getFilteredCollection([start, end]) {
       let collection = this.collection.filter(
         this.collectionFilter([start, end])
@@ -573,6 +605,7 @@ export default {
 
       return collection
     },
+
     collectionFilter([start, end]) {
       return (item) => {
         const uniqKey =
@@ -586,6 +619,7 @@ export default {
         return false
       }
     },
+
     waitUntilCollectionIsFull() {
       return new Promise((resolve) => {
         this.fillingCollectionResolver = resolve
